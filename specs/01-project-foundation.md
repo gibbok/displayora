@@ -356,10 +356,10 @@ public func makeInstalledFeatures() -> [any DisplayoraFeature]
 |---|---|---|
 | `brightness` | `BrightnessFeature` | `DISPLAYORA_FEATURE_BRIGHTNESS` |
 | `contrast` | `ContrastFeature` | `DISPLAYORA_FEATURE_CONTRAST` |
-| `volume` | `VolumeFeature` | `DISPLAYORA_FEATURE_VOLUME` |
-| `resolution` | `ResolutionFeature` | `DISPLAYORA_FEATURE_RESOLUTION` |
+| `volume-and-mute` | `VolumeFeature` | `DISPLAYORA_FEATURE_VOLUME` |
+| `resolution-selector` | `ResolutionFeature` | `DISPLAYORA_FEATURE_RESOLUTION` |
 | `keyboard-controls` | `KeyboardControlsFeature` | `DISPLAYORA_FEATURE_KEYBOARD_CONTROLS` |
-| `display-state` | `DisplayStateFeature` | `DISPLAYORA_FEATURE_DISPLAY_STATE` |
+| `disable-and-reenable-display` | `DisplayStateFeature` | `DISPLAYORA_FEATURE_DISPLAY_STATE` |
 | `night-comfort` | `NightComfortFeature` | `DISPLAYORA_FEATURE_NIGHT_COMFORT` |
 
 A catalog entry becomes selectable only in the same implementation commit that

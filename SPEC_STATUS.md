@@ -15,7 +15,7 @@ Code-review states: `Not reviewed`, `Reviewing`, `Changes requested`,
 |---|---|---|---|---|---|
 | 01 | Project Foundation | — | Ready | Not started | Not reviewed |
 | 02 | Menu-Bar Shell and Onboarding | 01 | Ready | Not started | Not reviewed |
-| 03 | Display Platform and Capabilities | 01, 02 | Planned | Not started | Not reviewed |
+| 03 | Display Platform and Capabilities | 01, 02 | Ready | Not started | Not reviewed |
 | 04 | Brightness | 01, 02, 03 | Planned | Not started | Not reviewed |
 | 05 | Contrast | 01, 02, 03 | Planned | Not started | Not reviewed |
 | 06 | Volume and Mute | 01, 02, 03 | Planned | Not started | Not reviewed |

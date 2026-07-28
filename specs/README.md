@@ -15,7 +15,12 @@ code.
    implementation choice, and records two self-review/revision passes.
 4. The author sets the tracker row to `Ready`.
 5. The coordinator runs `make check-specs` and `git diff --check`.
-6. The coordinator commits that specification before another author starts.
+6. The coordinator commits that specification.
+7. The coordinator pushes a dedicated `agent/spec-NN-<slug>` branch and opens
+   a draft pull request using [PR_TEMPLATE.md](PR_TEMPLATE.md).
+8. The coordinator confirms that the draft pull request diff contains only
+   that specification and its tracker-row change, then hands it to a human
+   reviewer before another specification author starts.
 
 Use `docs(spec-NN): define <feature>` for numbered specification commits. The
 workflow bootstrap uses `docs(specs): establish specification workflow`.
@@ -23,6 +28,27 @@ workflow bootstrap uses `docs(specs): establish specification workflow`.
 No numbered author edits another specification, workflow policy, validator, or
 application code. A blocked dependency keeps downstream specifications
 `Planned`.
+
+### Human Review Pull Requests
+
+Every numbered specification requires its own draft pull request. Workflow
+policy changes made while producing the suite also use a dedicated draft pull
+request. The description must begin with a short summary in everyday product
+language: what a user or implementer gains from the specification and the
+major behavior it locks down. Do not substitute a list of requirement IDs for
+that summary.
+
+The remainder names important decisions, why they matter, boundaries or risky
+areas that deserve human attention, dependencies, and the exact checks run.
+The PR remains a draft while handed to the human reviewer; only the human
+review process decides when it is ready to merge.
+
+If a predecessor is not merged, stack the new PR on the predecessor branch so
+the Files changed view contains one numbered specification. State the stack
+relationship in the description. After the predecessor merges, retarget or
+rebase the next PR onto `main` before merging it. Human review and merge state
+are GitHub concerns; `Ready` in `SPEC_STATUS.md` continues to mean the
+specification itself passed repository validation.
 
 ## Implementing One Specification
 

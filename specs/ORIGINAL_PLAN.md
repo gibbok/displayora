@@ -145,8 +145,18 @@ make check-specs
 git diff --check
 ```
 
-The coordinator commits before another specification starts. Documentation
-commits use `docs(spec-NN): define <feature>`.
+The coordinator commits and opens a draft pull request before another
+specification starts. Documentation commits use
+`docs(spec-NN): define <feature>`. Every numbered specification has its own
+draft pull request for human review. The pull request description begins with
+a concise, human-readable summary of the outcome and explains the important
+decisions, why they matter, review focus, dependencies, and validation without
+requiring the reviewer to decode requirement IDs.
+
+When earlier specification pull requests have not merged yet, later pull
+requests may be stacked on the immediately preceding specification branch so
+each review contains exactly one specification diff. The coordinator retargets
+or rebases the next pull request onto `main` as its predecessor merges.
 
 ## Mandatory Implementation Review and Repair
 
@@ -216,3 +226,4 @@ formatting, focused tests, regression tests, and strict concurrency checks.
 | 2026-07-28 | Approved the standalone feature architecture and sequence above. |
 | 2026-07-28 | Required independent Codex implementation review with automatic repair before `Verified`. |
 | 2026-07-28 | Locked terminal-only SwiftPM development and direct notarized DMG distribution. |
+| 2026-07-28 | Required one human-reviewed draft pull request per numbered specification, with a plain-language summary in its description; workflow changes follow the same draft-PR practice. |

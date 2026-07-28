@@ -111,3 +111,12 @@ Record findings and concrete revisions.
 ### Pass 2 — Independence and Verifiability
 
 Record findings and concrete revisions.
+
+## Pull Request Handoff
+
+The coordinator, not the specification author, opens the dedicated draft
+human-review pull request using [PR_TEMPLATE.md](PR_TEMPLATE.md). The PR
+description must start with a plain-language summary and record the
+specification decisions, user/developer impact, review focus, dependency or
+stack base, and validation results. This section is a handoff reminder only;
+the final PR URL and human review state live on GitHub.

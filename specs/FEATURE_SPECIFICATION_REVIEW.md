@@ -50,9 +50,25 @@ behavior and omission behavior.
 | Disable and Re-enable Display | Disabling the last usable display or partially applying recovery can strand the user. | The specification protects the final usable display and defines timed recovery, transactional fallback, topology reconciliation, and persistent failure guidance. |
 | Night Comfort | Fixed local schedules are vulnerable to overnight, daylight-saving, and timezone edge cases. | The specification defines equal-time, overnight, clock, timezone, daylight-saving, sleep, and wake behavior explicitly. |
 
-No unresolved product decision or blocking technical inconsistency was found.
+No unresolved product decision or blocking technical inconsistency remains.
 The specifications remain independent of optional sibling features and retain
 their existing macOS, accessibility, recovery, and omission guarantees.
+
+## Second-pass findings
+
+The second pass found and corrected three documentation inconsistencies:
+
+1. Specifications 04–10 were marked `Planned` in the authoritative tracker
+   even though their metadata declared them `Ready`.
+2. Specification 01 used `volume`, `resolution`, and `display-state` as
+   selection slugs, while the corresponding feature specifications used
+   `volume-and-mute`, `resolution-selector`, and
+   `disable-and-reenable-display`.
+3. The Night Comfort state diagram did not show Manual mode entering the HDR
+   or unavailable suspended state, despite the requirement covering both
+   Manual and Schedule modes.
+
+All three inconsistencies are resolved in this PR.
 
 ## Implementation handoff
 

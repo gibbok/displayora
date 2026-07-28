@@ -16,11 +16,11 @@ Code-review states: `Not reviewed`, `Reviewing`, `Changes requested`,
 | 01 | Project Foundation | — | Ready | Not started | Not reviewed |
 | 02 | Menu-Bar Shell and Onboarding | 01 | Ready | Not started | Not reviewed |
 | 03 | Display Platform and Capabilities | 01, 02 | Ready | Not started | Not reviewed |
-| 04 | Brightness | 01, 02, 03 | Planned | Not started | Not reviewed |
-| 05 | Contrast | 01, 02, 03 | Planned | Not started | Not reviewed |
-| 06 | Volume and Mute | 01, 02, 03 | Planned | Not started | Not reviewed |
-| 07 | Resolution Selector | 01, 02, 03 | Planned | Not started | Not reviewed |
-| 08 | Keyboard Controls | 01, 02, 03 | Planned | Not started | Not reviewed |
-| 09 | Disable and Re-enable Display | 01, 02, 03 | Planned | Not started | Not reviewed |
-| 10 | Night Comfort | 01, 02, 03 | Planned | Not started | Not reviewed |
+| 04 | Brightness | 01, 02, 03 | Ready | Not started | Not reviewed |
+| 05 | Contrast | 01, 02, 03 | Ready | Not started | Not reviewed |
+| 06 | Volume and Mute | 01, 02, 03 | Ready | Not started | Not reviewed |
+| 07 | Resolution Selector | 01, 02, 03 | Ready | Not started | Not reviewed |
+| 08 | Keyboard Controls | 01, 02, 03 | Ready | Not started | Not reviewed |
+| 09 | Disable and Re-enable Display | 01, 02, 03 | Ready | Not started | Not reviewed |
+| 10 | Night Comfort | 01, 02, 03 | Ready | Not started | Not reviewed |
 | 11 | Direct Distribution and Release | 01, 02, 03 | Planned | Not started | Not reviewed |

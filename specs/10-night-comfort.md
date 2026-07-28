@@ -33,6 +33,7 @@ stateDiagram-v2
     Off --> Manual
     Off --> ScheduledInactive
     Manual --> Off
+    Manual --> Suspended: HDR or display unavailable
     ScheduledInactive --> ScheduledActive: start time
     ScheduledActive --> ScheduledInactive: end time
     ScheduledActive --> Suspended: HDR or display unavailable

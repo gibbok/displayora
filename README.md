@@ -7,5 +7,5 @@ and Apple Silicon. The implementation is intentionally preceded by a
 standalone, incrementally committed specification suite.
 
 - [Original approved plan](specs/ORIGINAL_PLAN.md)
-- [Specification status](SPEC_STATUS.md)
+- [Specification status](specs/SPEC_STATUS.md)
 - [Specification workflow](specs/README.md)

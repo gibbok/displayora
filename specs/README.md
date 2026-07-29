@@ -14,7 +14,9 @@ code.
 3. The author starts from [TEMPLATE.md](TEMPLATE.md), resolves every product and
    implementation choice, and records two self-review/revision passes.
 4. The author sets the tracker row to `Ready`.
-5. The coordinator runs `make check-specs` and `git diff --check`.
+5. The coordinator runs the specification-only validation below. After
+   Specification 01 has implemented the repository validator, this also
+   includes `make check-specs`.
 6. The coordinator commits that specification.
 7. The coordinator pushes a dedicated `agent/spec-NN-<slug>` branch and opens
    a draft pull request using [PR_TEMPLATE.md](PR_TEMPLATE.md).
@@ -81,7 +83,28 @@ The platform and release must still build with that module absent. Omission
 means there are no controls, placeholders, shortcuts, settings, registrations,
 imports, or failed checks associated with the feature.
 
-## Validation
+## Specification-Only Validation
+
+Before Specification 01 is implemented, the repository intentionally contains
+no custom validator or application tooling. For every specification revision:
+
+1. Run `git diff --check`.
+2. Confirm every changed repository file is Markdown and inside `specs/`.
+3. Resolve every relative Markdown link.
+4. Confirm each numbered file's metadata matches `SPEC_STATUS.md`.
+5. Confirm requirement IDs are unique and every requirement appears in at
+   least one acceptance-criteria row.
+6. Confirm finished numbered specifications contain no unresolved `TODO`,
+   `TBD`, `FIXME`, `XXX`, open question, or placeholder guidance.
+7. Confirm fenced code blocks are balanced and the diff introduces no trailing
+   whitespace.
+
+Record this checklist and its result in the pull request. Do not add a
+temporary validator merely to review Markdown.
+
+## Implementation-Phase Validation
+
+After Specification 01 implements the documented Makefile and validators, run:
 
 ```sh
 make check-specs

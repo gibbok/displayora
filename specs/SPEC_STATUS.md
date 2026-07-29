@@ -13,7 +13,7 @@ Code-review states: `Not reviewed`, `Reviewing`, `Changes requested`,
 
 | ID | Specification | Dependencies | Specification | Implementation | Code review |
 |---|---|---|---|---|---|
-| 01 | Project Foundation | — | Ready | Not started | Not reviewed |
+| 01 | Project Foundation | — | Ready | In progress | Reviewing |
 | 02 | Menu-Bar Shell and Onboarding | 01 | Ready | Not started | Not reviewed |
 | 03 | Display Platform and Capabilities | 01, 02 | Ready | Not started | Not reviewed |
 | 04 | Brightness | 01, 02, 03 | Ready | Not started | Not reviewed |

@@ -560,6 +560,18 @@ independent approval, set implementation to `Verified` and code review to
 `specs/reviews/03-display-platform-and-capabilities-review.md`; a Verified row
 without its Approved report fails.
 
+### Manual evidence mapping
+
+| ID | Required evidence |
+|---|---|
+| `MANUAL-03-02` | Matrix Steps 1–3 for persistent/connection-scoped identity, collision privacy, deterministic reconnect, and stale-generation rejection |
+| `MANUAL-03-03` | Matrix Steps 2–3 for coalesced hot-plug and rapid reconnect behavior |
+| `MANUAL-03-04` | Matrix Step 4 for sleep/wake cancellation, restoration, invalidation, and fresh intent |
+| `MANUAL-03-09` | Matrix Step 7 for composition, last-owner removal, and normal-quit restoration |
+| `MANUAL-03-10` | Matrix Step 6 for SDR/HDR safety and restore-before-reprobe behavior |
+| `MANUAL-03-12` | Matrix Step 8 for semantic state, focus stability, privacy, accessibility, and no permission prompt |
+| `MANUAL-03-14` | The architecture commands and all matrix steps on both native Intel and native Apple Silicon using the identical bundle |
+
 ### Manual Intel and Apple Silicon matrix
 
 Use the same universal app and a disposable user on one native Intel Mac and

@@ -551,3 +551,9 @@ ServiceManagement facade and volatile defaults suite, defined forbidden-edge
 architecture scans, added exact empty and single-fixture verification, and
 made native Intel and Apple Silicon evidence and the independent Codex
 automatic-repair approval gate traceable.
+
+## Pull Request Handoff
+
+Open a dedicated draft PR with a plain-language shell and onboarding summary,
+state precedence, launch-at-login behavior, accessibility guarantees, and the
+validation evidence that still needs human review.

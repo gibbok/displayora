@@ -43,7 +43,8 @@ stateDiagram-v2
 ## Requirements
 
 - **DORA-07-001:** `ResolutionFeature` is an optional standalone
-  `DisplayoraFeature` module using public Core Graphics APIs.
+  `DisplayoraFeature` module with the exact static `FeatureID`
+  `resolution-selector`, using public Core Graphics APIs.
 - **DORA-07-002:** Modes come from `CGDisplayCopyAllDisplayModes`, are filtered
   to usable non-duplicate modes, and are keyed by complete mode identity rather
   than display text.

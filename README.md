@@ -46,6 +46,25 @@ make run-ui-harness STATE=failed
 The harness is forced off by universal bundle and installation workflows and
 is rejected if its fixture marker appears in a production bundle.
 
+## Make commands
+
+- `make doctor` — check the required development tools and environment.
+- `make build` — compile the application.
+- `make test` — run all automated tests.
+- `make run` — build and launch the app directly.
+- `make bundle` — create the macOS application bundle.
+- `make install` — bundle and install the app into `~/Applications`.
+- `make run-installed` — launch the installed app.
+- `make clean` — remove generated build files.
+- `make format` — check Swift code formatting.
+- `make verify` — run the complete validation suite.
+- `make check-specs` — validate project specification files.
+- `make check-architecture` — check architectural rules.
+- `make check-review SPEC=NN` — validate a specific review document.
+- `make run-ui-harness STATE=loading|populated|failed` — launch the UI harness.
+- `make test-install` — test bundle and installation transactions.
+- `make verify-feature FEATURE=NAME` — verify a specific feature.
+
 ## Recommended implementation order
 
 Implement the feature specifications in this order:

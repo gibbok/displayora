@@ -42,10 +42,14 @@ stateDiagram-v2
 ## Requirements
 
 - **DORA-06-001:** `VolumeFeature` is an optional standalone
-  `DisplayoraFeature` module.
-- **DORA-06-002:** DDC volume uses VCP `0x62`; DDC mute uses a separately
-  probed supported mute control. Reads and bounded write/read verification are
-  mandatory.
+  `DisplayoraFeature` module with the exact static `FeatureID`
+  `volume-and-mute`.
+- **DORA-06-002:** DDC volume uses continuous VCP `0x62` and requires a valid
+  nonzero reported maximum. DDC mute uses VCP `0x8D` only when probing proves
+  the simple MCCS values `0x01` (mute) and `0x02` (unmute) are readable and
+  writable; unknown or complex vendor values are unsupported rather than
+  guessed. Both controls require bounded no-op write/read verification of the
+  current value.
 - **DORA-06-003:** Core Audio is eligible only for a writable output with a
   stable device UID and a one-to-one association supplied by an injected
   `DisplayAudioAssociating` adapter using transport/route identity. Names alone
@@ -54,7 +58,10 @@ stateDiagram-v2
   associated Core Audio device is used. Ambiguity, multiple candidates,
   read-only properties, or no mechanism hides the feature.
 - **DORA-06-005:** Volume is `0...100`, debounced 75 ms, latest-wins, and
-  verified. Mute is shown only when the selected mechanism has writable mute.
+  verified. DDC volume displays `round(rawCurrent / rawMaximum * 100)`, writes
+  `round(percent / 100 * rawMaximum)`, and accepts read-back only within one
+  normalized percentage point. Mute is shown only when the selected mechanism
+  has independently verified writable mute.
 - **DORA-06-006:** Changing the default route does not redirect a display row
   unless association is recomputed and remains one-to-one. Stale AudioObject
   IDs and display endpoints are rejected.

@@ -126,6 +126,18 @@ make check-review SPEC=05
 git diff --check
 ```
 
+### Verification evidence
+
+| ID | Required evidence |
+|---|---|
+| `TEST-05-01` | `ContrastCapabilitySelectionTests` with verified DDC, fallback, temporary, and unsupported fixtures |
+| `TEST-05-02` | property tests over every allowed software percentage for finite, monotonic, bounded, endpoint-preserving curves and composition order |
+| `TEST-05-03` | virtual-clock debounce plus HDR, reconnect, sleep, rollback, owner removal, and termination lifecycle tests |
+| `MANUAL-05-03` | On native Intel and Apple Silicon, record DDC/fallback behavior, clipping-pattern observations, HDR result, reconnect/sleep/quit restoration, and process architecture. |
+| `TEST-05-04` | keyboard-step and accessibility-semantic tests for every mechanism/error state |
+| `MANUAL-05-04` | VoiceOver and Full Keyboard Access pass/fail at normal and increased contrast/scaling settings |
+| `TEST-05-05` | `make check-review SPEC=05` against the final approved review report |
+
 Manually verify DDC, SDR fallback, clipping patterns, HDR, reconnect, sleep,
 quit, keyboard, and VoiceOver on native Intel and Apple Silicon. The approved
 report is `specs/reviews/05-contrast-review.md`.

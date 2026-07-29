@@ -165,10 +165,15 @@ stateDiagram-v2
   setting, capability, and command IDs. It exits nonzero for zero, multiple,
   invalid, or failed registrations. Foundation tests compose a local fixture
   feature in the same registry and test the empty composition. The root
-  `scripts/verify_feature.py` maps a canonical slug to exactly one module and
-  test target, rejects absent modules, uses an isolated scratch directory,
-  builds and tests only that selection, runs the host, and then runs
-  architecture validation.
+  `scripts/verify_feature.py` accepts the canonical verification scopes
+  `foundation`, `shell`, `display-platform`, `release`, and the seven
+  optional-feature slugs listed below. It rejects unknown or not-yet-implemented
+  scopes and uses an isolated scratch directory. Optional-feature scopes select
+  exactly one optional module, run its focused tests and shared regressions,
+  execute the host with `--expect-feature`, and run architecture validation.
+  Platform and release scopes run their specification-defined focused
+  targets/fixtures and architecture validation without invoking the
+  one-installed-feature host.
 
 ### Terminal commands and validation
 
@@ -182,8 +187,8 @@ stateDiagram-v2
   `format` performs strict lint without modifying files; `run` runs the
   selected app; `bundle` produces and validates the universal app; `verify`
   runs doctor, specification, formatting, build, test, architecture, and
-  bundle checks; `verify-feature FEATURE=<name>` performs isolated feature
-  verification; and `clean` removes only known SwiftPM and bundle outputs
+  bundle checks; `verify-feature FEATURE=<name>` performs the isolated verification scope
+  defined by DORA-01-010; and `clean` removes only known SwiftPM and bundle outputs
   below `app/.build` and `dist`.
 - **DORA-01-012 — Compiler quality gates.** Every debug, test, per-architecture
   release, and feature-host build uses warnings as errors and complete strict
@@ -466,12 +471,18 @@ DISPLAYORA_FEATURES='' make verify
 DISPLAYORA_FEATURES='' make verify-feature FEATURE=foundation
 ```
 
-`FEATURE=foundation` is the sole special host mode: it builds and tests Core,
-UI, Composition, and `DisplayoraFeatureTestHost` in an isolated
-`app/.build/feature-foundation` scratch path, runs the host’s empty-composition
-failure assertion, runs the local one-feature fixture composition XCTest, and
-runs `make check-architecture`. It does not register the fixture in the
-production app.
+`FEATURE=foundation` is a platform verification scope. It builds and tests
+Core, UI, Composition, and `DisplayoraFeatureTestHost` in an isolated
+`app/.build/feature-foundation` scratch path, runs the host’s
+empty-composition failure assertion, runs the local one-feature fixture
+composition XCTest, and runs `make check-architecture`. It does not register
+the fixture in the production app.
+
+The other non-feature scopes are `shell`, `display-platform`, and `release`.
+They run the focused targets and fixtures defined by Specifications 02, 03, and
+11 in isolated scratch paths. They do not call
+`DisplayoraFeatureTestHost --expect-feature`, because none represents one
+installed optional feature.
 
 After an optional module is implemented, its standalone command is:
 
@@ -505,7 +516,7 @@ the empty application product.
 | `AC-01-04` | `DORA-01-005`, `DORA-01-006` | Given valid and invalid fixture features, When their contributions are registered, Then all four contribution categories are sorted and exposed for the valid feature while every invalid or duplicate case throws its typed error without partial state. | `TEST-01-04` |
 | `AC-01-05` | `DORA-01-007` | Given initial, successful, and failed registrations, When the application model loads or retries, Then it publishes the specified main-actor state and replaces rather than mutates a failed registry. | `TEST-01-05` |
 | `AC-01-06` | `DORA-01-008`, `DORA-01-009` | Given empty, valid single-feature, reordered multi-feature, duplicate, whitespace, empty-element, and unknown feature selections, When SwiftPM evaluates composition, Then valid selections are deterministic and invalid selections fail precisely while omitted features have no product reference. | `TEST-01-06` |
-| `AC-01-07` | `DORA-01-010` | Given foundation mode and one implemented optional feature selected alone, When `make verify-feature` runs, Then isolated tests pass, the host validates the expected count, deterministic JSON is produced for the feature, and no sibling is built or imported. | `TEST-01-07` |
+| `AC-01-07` | `DORA-01-010` | Given each platform/release scope and one implemented optional feature selected alone, When `make verify-feature` runs, Then the correct isolated tests pass; optional scopes also produce the expected one-feature host JSON; and no unintended sibling is built or imported. | `TEST-01-07` |
 | `AC-01-08` | `DORA-01-011` | Given the root Makefile, When each documented target is invoked with valid input and invalid required arguments are sampled, Then every target has the fixed behavior and failures are non-interactive and actionable. | `TEST-01-08` |
 | `AC-01-09` | `DORA-01-012` | Given all source and test targets, When formatting, debug build, test, release-slice, and host builds run, Then strict Swift 6 concurrency passes and every compiler warning is treated as an error. | `TEST-01-09` |
 | `AC-01-10` | `DORA-01-013` | Given the required XCTest and Python suites, When `make test` and `make check-architecture` run, Then every listed registry, state, composition, dependency, plist, bundle, and path invariant has an executable assertion. | `TEST-01-10` |
@@ -593,13 +604,21 @@ The test identifiers map to executable evidence as follows:
 | `TEST-01-04` | `DisplayoraUITests/FeatureRegistryTests` |
 | `TEST-01-05` | `DisplayoraTests/ApplicationModelTests` on the main actor |
 | `TEST-01-06` | `DisplayoraCompositionTests` plus manifest subprocess cases |
-| `TEST-01-07` | `make verify-feature FEATURE=foundation` and the applicable optional-feature invocation |
+| `TEST-01-07` | all four platform/release scope invocations plus each implemented optional-feature invocation |
 | `TEST-01-08` | `MakeContractTests`, which invokes safe targets in a temporary fixture repository |
 | `TEST-01-09` | `make format`, `make build`, `make test`, and both strict release slice builds inside `make bundle` |
 | `TEST-01-10` | `make test` and `make check-architecture`, including coverage-manifest assertions for required cases |
 | `TEST-01-11` | bundle log assertions and distinct-slice checks in `scripts/check_bundle.py` |
 | `TEST-01-12` | temporary-output success and injected pre-install validation-failure integration tests for `build-app.sh` |
 | `TEST-01-15` | `make check-review SPEC=01` after tracker approval |
+
+### Manual evidence mapping
+
+| ID | Required evidence |
+|---|---|
+| `MANUAL-01-03` | Steps 1–5 below on the empty selected build, recording the menu-bar item, popover, Settings window, Dock absence, and clean quit |
+| `MANUAL-01-13` | The architecture commands and Steps 1–5 below on both native Intel and native Apple Silicon using the identical bundle |
+| `MANUAL-01-14` | The assistive-technology and display-option repetition described after Steps 1–5 |
 
 ### Manual native verification
 
@@ -702,3 +721,9 @@ coverage, and explicit empty-selection checks. It then mapped every
 requirement to Given/When/Then criteria and named automated or manual evidence,
 added exact strict-concurrency and universal-bundle commands, and made
 independent Codex review plus automatic repair a prerequisite for `Verified`.
+
+## Pull Request Handoff
+
+Open a dedicated draft PR with a plain-language foundation and workflow
+summary, the locked target boundaries, validation results, and any native
+architecture evidence still requiring human confirmation.

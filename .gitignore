@@ -30,6 +30,8 @@ playground.xcworkspace
 # .swiftpm
 
 .build/
+app/.build/
+dist/
 
 # Python validation cache
 __pycache__/

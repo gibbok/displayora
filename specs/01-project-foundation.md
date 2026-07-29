@@ -7,7 +7,7 @@
 | ID | `01` |
 | Classification | Required platform |
 | Specification status | Ready |
-| Implementation status | Not started |
+| Implementation status | In progress — Apple Silicon validation pending |
 | Dependencies | None |
 
 ## Goal
@@ -38,7 +38,8 @@ project.
   Runtime, notarize, or staple an artifact; Specification 11 owns release
   packaging.
 - It does not use private macOS APIs, request a system permission, persist
-  settings, or introduce a third-party dependency.
+  settings, or introduce a third-party production dependency. The pinned
+  first-party `swift-testing` package is permitted only for test support.
 - It does not create an Xcode project as a generated convenience. SwiftPM and
   the root `Makefile` are the only supported project entry points.
 
@@ -96,8 +97,11 @@ stateDiagram-v2
 
 - **DORA-01-001 — SwiftPM platform.** Create `app/Package.swift` with
   `// swift-tools-version: 6.0`, Swift language mode 6, and
-  `.macOS(.v13)`. The package has no external dependencies. All production
-  Swift sources and tests live below `app/Sources` and `app/Tests`.
+  `.macOS(.v13)`. All production Swift sources and tests live below
+  `app/Sources` and `app/Tests`. Production targets have no external package
+  dependency. Test support may use only the first-party `swift-testing`
+  package pinned exactly to `6.2.4`; `Package.resolved` pins its transitive
+  graph. The package has no external runtime dependencies.
 - **DORA-01-002 — Stable target graph.** The package defines
   `DisplayoraCore`, `DisplayoraUI`, and `DisplayoraComposition` library
   targets; `Displayora` and `DisplayoraFeatureTestHost` executable targets;
@@ -181,7 +185,8 @@ stateDiagram-v2
   non-interactive targets with the following fixed meanings:
   `doctor` checks Swift 6, `swift format`, Python 3, `make`, `lipo`, `otool`,
   `plutil`, and `codesign`; `check-specs` validates documentation;
-  `check-architecture` rejects forbidden dependency and Xcode artifacts;
+  `check-architecture` rejects forbidden production dependencies and
+  repository-owned Xcode artifacts while ignoring generated build checkouts;
   `check-review SPEC=NN` validates durable review evidence; `build` builds the
   selected debug app; `test` runs selected focused and regression tests;
   `format` performs strict lint without modifying files; `run` runs the
@@ -190,16 +195,21 @@ stateDiagram-v2
   bundle checks; `verify-feature FEATURE=<name>` performs the isolated verification scope
   defined by DORA-01-010; and `clean` removes only known SwiftPM and bundle outputs
   below `app/.build` and `dist`.
+
+  `doctor` is a terminal-tool check only: it does not require Xcode, an Xcode
+  project, Xcode GUI state, `xcodebuild`, or XCTest. Swift Testing is used by
+  the focused SwiftPM test targets, so `make test` remains runnable with the
+  Swift Command Line Tools and does not require the full Xcode application.
 - **DORA-01-012 — Compiler quality gates.** Every debug, test, per-architecture
   release, and feature-host build uses warnings as errors and complete strict
   concurrency checking. Package language mode remains Swift 6. `swift format
   lint --recursive --strict` covers the manifest, sources, and tests. Test
   code may not relax compiler flags used by production code.
-- **DORA-01-013 — Automated coverage.** XCTest covers registry success,
+- **DORA-01-013 — Automated coverage.** Swift Testing covers registry success,
   deterministic order, every duplicate-ID class, invalid ownership, atomic
   rollback, retry after failure, empty composition, one fixture-feature
   composition, JSON host snapshots, and shell state transitions.
-  Dependency-free Python checks cover target direction, selected-feature
+  Python checks cover target direction, selected-feature
   isolation, absent sibling imports, forbidden Xcode artifacts, Info.plist
   values, universal architectures, signing, and the absence of unresolved
   build-path dependencies.
@@ -474,8 +484,8 @@ DISPLAYORA_FEATURES='' make verify-feature FEATURE=foundation
 `FEATURE=foundation` is a platform verification scope. It builds and tests
 Core, UI, Composition, and `DisplayoraFeatureTestHost` in an isolated
 `app/.build/feature-foundation` scratch path, runs the host’s
-empty-composition failure assertion, runs the local one-feature fixture
-composition XCTest, and runs `make check-architecture`. It does not register
+  empty-composition failure assertion, runs the local one-feature fixture
+  composition Swift Testing suite, and runs `make check-architecture`. It does not register
 the fixture in the production app.
 
 The other non-feature scopes are `shell`, `display-platform`, and `release`.
@@ -510,7 +520,7 @@ the empty application product.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-01-01` | `DORA-01-001`, `DORA-01-003` | Given a clean checkout with the documented tools, When the package manifest and repository are inspected and `make build` runs, Then Swift 6 builds for macOS 13+ without dependencies, Xcode projects, GUI state, or `xcodebuild`. | `TEST-01-01` |
+| `AC-01-01` | `DORA-01-001`, `DORA-01-003` | Given a clean checkout with the documented tools, When the package manifest and repository are inspected and `make build` runs, Then Swift 6 builds for macOS 13+ without external runtime dependencies, Xcode projects, GUI state, or `xcodebuild`; test support uses only the exactly pinned first-party `swift-testing` package. | `TEST-01-01` |
 | `AC-01-02` | `DORA-01-002` | Given the package target graph, When architecture validation runs, Then dependencies flow from Core through UI and Composition to executables and no reverse or sibling edge exists. | `TEST-01-02` |
 | `AC-01-03` | `DORA-01-004` | Given the empty selected set, When the app launches, Then one named menu-bar popover and a separate Settings scene are available and no permanent Dock icon appears. | `MANUAL-01-03` |
 | `AC-01-04` | `DORA-01-005`, `DORA-01-006` | Given valid and invalid fixture features, When their contributions are registered, Then all four contribution categories are sorted and exposed for the valid feature while every invalid or duplicate case throws its typed error without partial state. | `TEST-01-04` |
@@ -519,7 +529,7 @@ the empty application product.
 | `AC-01-07` | `DORA-01-010` | Given each platform/release scope and one implemented optional feature selected alone, When `make verify-feature` runs, Then the correct isolated tests pass; optional scopes also produce the expected one-feature host JSON; and no unintended sibling is built or imported. | `TEST-01-07` |
 | `AC-01-08` | `DORA-01-011` | Given the root Makefile, When each documented target is invoked with valid input and invalid required arguments are sampled, Then every target has the fixed behavior and failures are non-interactive and actionable. | `TEST-01-08` |
 | `AC-01-09` | `DORA-01-012` | Given all source and test targets, When formatting, debug build, test, release-slice, and host builds run, Then strict Swift 6 concurrency passes and every compiler warning is treated as an error. | `TEST-01-09` |
-| `AC-01-10` | `DORA-01-013` | Given the required XCTest and Python suites, When `make test` and `make check-architecture` run, Then every listed registry, state, composition, dependency, plist, bundle, and path invariant has an executable assertion. | `TEST-01-10` |
+| `AC-01-10` | `DORA-01-013` | Given the required Swift Testing and Python suites, When `make test` and `make check-architecture` run, Then every listed registry, state, composition, dependency, plist, bundle, and path invariant has an executable assertion. | `TEST-01-10` |
 | `AC-01-11` | `DORA-01-014` | Given a toolchain able to target both architectures, When `make bundle` runs, Then separate arm64 and x86_64 release invocations produce two distinct input binaries for `lipo`. | `TEST-01-11` |
 | `AC-01-12` | `DORA-01-015` | Given no prior bundle and then a known-good prior bundle, When bundling succeeds and a forced validation failure is tested, Then the successful output is a valid universal ad-hoc-signed app and the failure preserves the known-good output. | `TEST-01-12` |
 | `AC-01-13` | `DORA-01-016` | Given the same universal bundle on native Intel and Apple Silicon hosts, When it is launched and inspected, Then each host runs its native slice, shows equivalent menu and Settings behavior, and has no Dock icon. | `MANUAL-01-13` |
@@ -530,8 +540,10 @@ the empty application product.
 
 ### Automated commands
 
-Run from the repository root with Xcode Command Line Tools selected. These
-commands are exact; none may be replaced with `xcodebuild`.
+Run from the repository root with a Swift 6 command-line toolchain selected.
+These commands are exact; none may be replaced with `xcodebuild`. The doctor,
+production build, bundle, installation, and SwiftPM test workflows do not
+require the full Xcode application.
 
 ```sh
 make doctor

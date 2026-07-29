@@ -69,6 +69,14 @@ specification itself passed repository validation.
 6. Run `make check-review SPEC=NN`, mark implementation `Verified` and code
    review `Approved`, then commit.
 
+With explicit maintainer approval, an implementation may merge as a
+development baseline when its only remaining blocker is platform-specific
+validation that cannot run on the available hardware. Keep implementation
+`In progress` and code review `Reviewing`, record the deferred evidence in
+`SPEC_STATUS.md` and the durable review report, and permit dependent
+implementation work to continue. Do not use `Verified` or `Approved` until the
+missing evidence is recorded and the normal review gate passes.
+
 If a finding requires a new product decision or a specification change, set
 implementation to `Blocked` and stop. Never invent behavior merely to make a
 review pass.

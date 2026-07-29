@@ -30,14 +30,27 @@ Schedule has start and end local times and supports overnight ranges such as
 
 ```mermaid
 stateDiagram-v2
-    Off --> Manual
-    Off --> ScheduledInactive
-    Manual --> Off
-    Manual --> Suspended: HDR or display unavailable
-    ScheduledInactive --> ScheduledActive: start time
-    ScheduledActive --> ScheduledInactive: end time
-    ScheduledActive --> Suspended: HDR or display unavailable
-    Suspended --> ScheduledActive: safe again
+    [*] --> Off
+    Off --> Manual: select Manual
+    Off --> ScheduledInactive: select Schedule outside interval
+    Off --> ScheduledActive: select Schedule inside interval
+    Manual --> Off: select Off
+    Manual --> ScheduledInactive: select Schedule outside interval
+    Manual --> ScheduledActive: select Schedule inside interval
+    Manual --> ManualSuspended: HDR or display unavailable
+    ManualSuspended --> Manual: safe again
+    ManualSuspended --> Off: select Off
+    ScheduledInactive --> ScheduledActive: start boundary
+    ScheduledInactive --> Manual: select Manual
+    ScheduledInactive --> Off: select Off
+    ScheduledActive --> ScheduledInactive: end boundary
+    ScheduledActive --> ScheduleSuspended: HDR or display unavailable
+    ScheduledActive --> Manual: select Manual
+    ScheduledActive --> Off: select Off
+    ScheduleSuspended --> ScheduledActive: safe inside interval
+    ScheduleSuspended --> ScheduledInactive: end boundary or safe outside interval
+    ScheduleSuspended --> Manual: select Manual
+    ScheduleSuspended --> Off: select Off
 ```
 
 ## Requirements
@@ -57,9 +70,13 @@ stateDiagram-v2
 - **DORA-10-006:** The feature submits/removes only its own
   `ColorTransformCoordinator` contribution and never imports Brightness,
   Contrast, or another sibling.
-- **DORA-10-007:** HDR or unknown safety removes the contribution and shows
-  “Night Comfort is paused for HDR”; safe SDR restoration reevaluates current
-  intent rather than using stale state.
+- **DORA-10-007:** HDR, unknown transform safety, or display unavailability
+  removes the contribution. The UI reports the actual cause: “Night Comfort is
+  paused for HDR”, “Night Comfort is paused while display safety is unknown”,
+  or “Night Comfort is paused while the display is unavailable”. When a safe
+  display returns, the controller reevaluates the selected mode, current local
+  time, and schedule before submitting a new contribution; it never reuses a
+  stale contribution.
 - **DORA-10-008:** Disconnect, sleep, feature removal, mode Off, and normal
   termination restore the owned transform. Wake and reconnect reevaluate.
 - **DORA-10-009:** Settings and status are keyboard/VoiceOver accessible,
@@ -83,8 +100,11 @@ No optional sibling type or state participates.
 ## Failure and Recovery
 
 Invalid stored settings fall back to Off with a visible reset message. Apply
-failure keeps intent but shows paused/error state. Time changes cancel the old
-timer before scheduling one new boundary. Repeated events are idempotent.
+failure keeps intent but shows “Night Comfort couldn’t be applied” rather than
+an HDR or availability pause reason. Time changes cancel the old timer before
+scheduling one new boundary. Leaving a suspended state always reevaluates mode,
+current local time, schedule boundaries, and display safety. Repeated events
+are idempotent.
 
 ## Accessibility and Permissions
 
@@ -116,7 +136,7 @@ import. `make check-architecture` rejects sibling coupling.
 |---|---|---|---|
 | `AC-10-01` | `DORA-10-001`, `DORA-10-002`, `DORA-10-006` | Given Night Comfort alone, When manual warmth changes, Then only its valid owned curve changes and no sibling is required. | `TEST-10-01` |
 | `AC-10-02` | `DORA-10-003`, `DORA-10-004`, `DORA-10-005` | Given daytime, overnight, equal, DST, timezone, and clock cases, When boundaries pass, Then active state and next timer are correct. | `TEST-10-02` |
-| `AC-10-03` | `DORA-10-007`, `DORA-10-008` | Given HDR, sleep, disconnect, wake, Off, and quit, When safety changes, Then the owned transform restores and current intent reevaluates. | `TEST-10-03`, `MANUAL-10-03` |
+| `AC-10-03` | `DORA-10-007`, `DORA-10-008` | Given Manual or Schedule mode, HDR, unknown safety, sleep, disconnect, wake, Off, and quit, When safety changes, Then the owned transform restores, the exact pause reason appears, and recovery reevaluates mode and the current schedule before applying. | `TEST-10-03`, `MANUAL-10-03` |
 | `AC-10-04` | `DORA-10-009` | Given keyboard and VoiceOver, When settings and paused states are used, Then all meaning is operable and announced without permission. | `TEST-10-04`, `MANUAL-10-04` |
 | `AC-10-05` | `DORA-10-010` | Given implementation, When independent Codex review automatically repairs findings, Then zero Blocking findings and `Approved` precede `Verified`. | `TEST-10-05` |
 

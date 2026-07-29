@@ -1,13 +1,14 @@
 import DisplayoraCore
+import DisplayoraTestSupport
 import DisplayoraUI
 import Foundation
-import XCTest
+import Testing
 
 @testable import DisplayoraFeatureTestHost
 
 @MainActor
-final class HostSnapshotTests: XCTestCase {
-  func testHostSnapshotUsesRequiredArraysAndDeterministicJSON() throws {
+struct HostSnapshotTests {
+  @Test func testHostSnapshotUsesRequiredArraysAndDeterministicJSON() throws {
     let registry = FeatureRegistry()
     try registry.register(HostFixtureFeature())
 
@@ -20,7 +21,7 @@ final class HostSnapshotTests: XCTestCase {
     )
   }
 
-  func testEmptySnapshotContainsAllArrays() throws {
+  @Test func testEmptySnapshotContainsAllArrays() throws {
     let data = try encodeHostSnapshot(makeHostSnapshot(from: .empty))
     let decoded = try JSONDecoder().decode(HostSnapshot.self, from: data)
 
@@ -30,7 +31,7 @@ final class HostSnapshotTests: XCTestCase {
     )
   }
 
-  func testUsageAndUnknownSlugExitCodes() {
+  @Test func testUsageAndUnknownSlugExitCodes() {
     XCTAssertEqual(
       runFeatureHost(arguments: [], features: []),
       HostExecution(
@@ -49,7 +50,7 @@ final class HostSnapshotTests: XCTestCase {
     )
   }
 
-  func testCountMismatchAndRegistrationFailureExitCodes() {
+  @Test func testCountMismatchAndRegistrationFailureExitCodes() {
     let empty = runFeatureHost(
       arguments: ["--expect-feature", "brightness"],
       features: []
@@ -73,7 +74,7 @@ final class HostSnapshotTests: XCTestCase {
     XCTAssertFalse(failed.standardError.contains("private failure detail"))
   }
 
-  func testExpectedFeatureMismatchAndSuccessfulJSON() {
+  @Test func testExpectedFeatureMismatchAndSuccessfulJSON() {
     let mismatch = runFeatureHost(
       arguments: ["--expect-feature", "brightness"],
       features: [ContrastHostFixture()]

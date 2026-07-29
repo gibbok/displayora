@@ -1,12 +1,13 @@
 import DisplayoraCore
+import DisplayoraTestSupport
 import DisplayoraUI
-import XCTest
+import Testing
 
 @testable import Displayora
 
 @MainActor
-final class ApplicationModelTests: XCTestCase {
-  func testStartsRegisteringAndBecomesReadyEmpty() {
+struct ApplicationModelTests {
+  @Test func testStartsRegisteringAndBecomesReadyEmpty() {
     let model = ApplicationModel(installedFeatures: [])
 
     guard case .registering = model.state else {
@@ -21,7 +22,7 @@ final class ApplicationModelTests: XCTestCase {
     XCTAssertTrue(snapshot.features.isEmpty)
   }
 
-  func testFailurePublishesSafeErrorAndClearsPartialRegistry() {
+  @Test func testFailurePublishesSafeErrorAndClearsPartialRegistry() {
     let model = ApplicationModel(
       installedFeatures: [SuccessfulAppFixture(), AlwaysFailingAppFixture()]
     )
@@ -35,7 +36,7 @@ final class ApplicationModelTests: XCTestCase {
     XCTAssertTrue(model.registry.snapshot.features.isEmpty)
   }
 
-  func testRetryCreatesANewRegistryAndReplaysInstalledFeatures() {
+  @Test func testRetryCreatesANewRegistryAndReplaysInstalledFeatures() {
     let fixture = RecoveringAppFixture()
     let model = ApplicationModel(installedFeatures: [fixture])
     let initialRegistry = model.registry

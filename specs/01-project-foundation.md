@@ -97,7 +97,9 @@ stateDiagram-v2
 - **DORA-01-001 — SwiftPM platform.** Create `app/Package.swift` with
   `// swift-tools-version: 6.0`, Swift language mode 6, and
   `.macOS(.v13)`. The package has no external dependencies. All production
-  Swift sources and tests live below `app/Sources` and `app/Tests`.
+  Swift sources and tests live below `app/Sources` and `app/Tests`. Tests use
+  the toolchain-provided Swift Testing module; the package has no external
+  runtime dependencies.
 - **DORA-01-002 — Stable target graph.** The package defines
   `DisplayoraCore`, `DisplayoraUI`, and `DisplayoraComposition` library
   targets; `Displayora` and `DisplayoraFeatureTestHost` executable targets;
@@ -192,16 +194,15 @@ stateDiagram-v2
   below `app/.build` and `dist`.
 
   `doctor` is a terminal-tool check only: it does not require Xcode, an Xcode
-  project, Xcode GUI state, `xcodebuild`, or the XCTest module. XCTest
-  availability is validated by `make test` because it is needed only by the
-  focused test targets, not by the production build, bundle, or installation
-  workflow.
+  project, Xcode GUI state, `xcodebuild`, or XCTest. Swift Testing is used by
+  the focused SwiftPM test targets, so `make test` remains runnable with the
+  Swift Command Line Tools and does not require the full Xcode application.
 - **DORA-01-012 — Compiler quality gates.** Every debug, test, per-architecture
   release, and feature-host build uses warnings as errors and complete strict
   concurrency checking. Package language mode remains Swift 6. `swift format
   lint --recursive --strict` covers the manifest, sources, and tests. Test
   code may not relax compiler flags used by production code.
-- **DORA-01-013 — Automated coverage.** XCTest covers registry success,
+- **DORA-01-013 — Automated coverage.** Swift Testing covers registry success,
   deterministic order, every duplicate-ID class, invalid ownership, atomic
   rollback, retry after failure, empty composition, one fixture-feature
   composition, JSON host snapshots, and shell state transitions.
@@ -480,8 +481,8 @@ DISPLAYORA_FEATURES='' make verify-feature FEATURE=foundation
 `FEATURE=foundation` is a platform verification scope. It builds and tests
 Core, UI, Composition, and `DisplayoraFeatureTestHost` in an isolated
 `app/.build/feature-foundation` scratch path, runs the host’s
-empty-composition failure assertion, runs the local one-feature fixture
-composition XCTest, and runs `make check-architecture`. It does not register
+  empty-composition failure assertion, runs the local one-feature fixture
+  composition Swift Testing suite, and runs `make check-architecture`. It does not register
 the fixture in the production app.
 
 The other non-feature scopes are `shell`, `display-platform`, and `release`.
@@ -525,7 +526,7 @@ the empty application product.
 | `AC-01-07` | `DORA-01-010` | Given each platform/release scope and one implemented optional feature selected alone, When `make verify-feature` runs, Then the correct isolated tests pass; optional scopes also produce the expected one-feature host JSON; and no unintended sibling is built or imported. | `TEST-01-07` |
 | `AC-01-08` | `DORA-01-011` | Given the root Makefile, When each documented target is invoked with valid input and invalid required arguments are sampled, Then every target has the fixed behavior and failures are non-interactive and actionable. | `TEST-01-08` |
 | `AC-01-09` | `DORA-01-012` | Given all source and test targets, When formatting, debug build, test, release-slice, and host builds run, Then strict Swift 6 concurrency passes and every compiler warning is treated as an error. | `TEST-01-09` |
-| `AC-01-10` | `DORA-01-013` | Given the required XCTest and Python suites, When `make test` and `make check-architecture` run, Then every listed registry, state, composition, dependency, plist, bundle, and path invariant has an executable assertion. | `TEST-01-10` |
+| `AC-01-10` | `DORA-01-013` | Given the required Swift Testing and Python suites, When `make test` and `make check-architecture` run, Then every listed registry, state, composition, dependency, plist, bundle, and path invariant has an executable assertion. | `TEST-01-10` |
 | `AC-01-11` | `DORA-01-014` | Given a toolchain able to target both architectures, When `make bundle` runs, Then separate arm64 and x86_64 release invocations produce two distinct input binaries for `lipo`. | `TEST-01-11` |
 | `AC-01-12` | `DORA-01-015` | Given no prior bundle and then a known-good prior bundle, When bundling succeeds and a forced validation failure is tested, Then the successful output is a valid universal ad-hoc-signed app and the failure preserves the known-good output. | `TEST-01-12` |
 | `AC-01-13` | `DORA-01-016` | Given the same universal bundle on native Intel and Apple Silicon hosts, When it is launched and inspected, Then each host runs its native slice, shows equivalent menu and Settings behavior, and has no Dock icon. | `MANUAL-01-13` |
@@ -538,9 +539,8 @@ the empty application product.
 
 Run from the repository root with a Swift 6 command-line toolchain selected.
 These commands are exact; none may be replaced with `xcodebuild`. The doctor,
-production build, bundle, and installation workflows do not require Xcode GUI
-state. A test run additionally needs the XCTest module used by the focused
-test targets.
+production build, bundle, installation, and SwiftPM test workflows do not
+require the full Xcode application.
 
 ```sh
 make doctor

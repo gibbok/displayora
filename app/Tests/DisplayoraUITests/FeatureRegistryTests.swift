@@ -1,12 +1,13 @@
 import DisplayoraCore
+import DisplayoraTestSupport
 import SwiftUI
-import XCTest
+import Testing
 
 @testable import DisplayoraUI
 
 @MainActor
-final class FeatureRegistryTests: XCTestCase {
-  func testRegistersAndSortsEveryContributionCategory() throws {
+struct FeatureRegistryTests {
+  @Test func testRegistersAndSortsEveryContributionCategory() throws {
     let registry = FeatureRegistry()
     try registry.register(SortedFixtureFeature())
 
@@ -24,7 +25,7 @@ final class FeatureRegistryTests: XCTestCase {
       snapshot.commands.map(\.id.rawValue), ["fixture.command-a", "fixture.command-b"])
   }
 
-  func testRejectsDuplicateFeature() throws {
+  @Test func testRejectsDuplicateFeature() throws {
     let registry = FeatureRegistry()
     try registry.register(EmptyFixtureFeature())
 
@@ -33,7 +34,7 @@ final class FeatureRegistryTests: XCTestCase {
     }
   }
 
-  func testRejectsEveryDuplicateContributionCategoryAtomically() throws {
+  @Test func testRejectsEveryDuplicateContributionCategoryAtomically() throws {
     try assertDuplicate(
       kind: .control,
       expected: .duplicateControl(controlID("fixture.duplicate"))
@@ -52,7 +53,7 @@ final class FeatureRegistryTests: XCTestCase {
     )
   }
 
-  func testRejectsOwnerMismatchAndEmptyLabels() {
+  @Test func testRejectsOwnerMismatchAndEmptyLabels() {
     XCTAssertThrowsError(
       try ControlContribution(
         id: controlID("other.control"),
@@ -85,7 +86,7 @@ final class FeatureRegistryTests: XCTestCase {
     }
   }
 
-  func testSanitizesUnknownConstructionFailure() {
+  @Test func testSanitizesUnknownConstructionFailure() {
     let registry = FeatureRegistry()
 
     XCTAssertThrowsError(try registry.register(ThrowingFixtureFeature())) { error in
@@ -98,7 +99,7 @@ final class FeatureRegistryTests: XCTestCase {
     XCTAssertTrue(registry.snapshot.features.isEmpty)
   }
 
-  func testRejectsFeatureIdentityMismatchAtomically() {
+  @Test func testRejectsFeatureIdentityMismatchAtomically() {
     let registry = FeatureRegistry()
     let before = fingerprint(registry.snapshot)
 
@@ -111,7 +112,7 @@ final class FeatureRegistryTests: XCTestCase {
     XCTAssertEqual(fingerprint(registry.snapshot), before)
   }
 
-  func testSettingsFallbackReportsWhetherAppKitAcceptedAction() {
+  @Test func testSettingsFallbackReportsWhetherAppKitAcceptedAction() {
     var receivedSelector: Selector?
     let accepted = AppKitSettingsOpener { selector in
       receivedSelector = selector

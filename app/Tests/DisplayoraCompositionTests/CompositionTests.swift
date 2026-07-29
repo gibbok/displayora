@@ -1,15 +1,16 @@
 import DisplayoraComposition
 import DisplayoraCore
+import DisplayoraTestSupport
 import DisplayoraUI
-import XCTest
+import Testing
 
 @MainActor
-final class CompositionTests: XCTestCase {
-  func testFoundationCompositionIsEmpty() {
+struct CompositionTests {
+  @Test func testFoundationCompositionIsEmpty() {
     XCTAssertTrue(makeInstalledFeatures().isEmpty)
   }
 
-  func testLocalFixtureUsesTheProductionRegistryWithoutEnteringComposition() throws {
+  @Test func testLocalFixtureUsesTheProductionRegistryWithoutEnteringComposition() throws {
     let registry = FeatureRegistry()
     try registry.register(LocalFixtureFeature())
 

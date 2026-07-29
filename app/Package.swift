@@ -107,29 +107,35 @@ let package = Package(
       dependencies: ["DisplayoraComposition", "DisplayoraUI"],
       swiftSettings: strictSwiftSettings
     ),
+    .target(
+      name: "DisplayoraTestSupport",
+      dependencies: [],
+      path: "Tests/DisplayoraTestSupport",
+      swiftSettings: strictSwiftSettings
+    ),
     .testTarget(
       name: "DisplayoraCoreTests",
-      dependencies: ["DisplayoraCore"],
+      dependencies: ["DisplayoraCore", "DisplayoraTestSupport"],
       swiftSettings: strictSwiftSettings
     ),
     .testTarget(
       name: "DisplayoraUITests",
-      dependencies: ["DisplayoraCore", "DisplayoraUI"],
+      dependencies: ["DisplayoraCore", "DisplayoraUI", "DisplayoraTestSupport"],
       swiftSettings: strictSwiftSettings
     ),
     .testTarget(
       name: "DisplayoraCompositionTests",
-      dependencies: ["DisplayoraComposition", "DisplayoraCore", "DisplayoraUI"],
+      dependencies: ["DisplayoraComposition", "DisplayoraCore", "DisplayoraUI", "DisplayoraTestSupport"],
       swiftSettings: strictSwiftSettings
     ),
     .testTarget(
       name: "DisplayoraTests",
-      dependencies: ["Displayora", "DisplayoraCore", "DisplayoraUI"],
+      dependencies: ["Displayora", "DisplayoraCore", "DisplayoraUI", "DisplayoraTestSupport"],
       swiftSettings: strictSwiftSettings
     ),
     .testTarget(
       name: "DisplayoraFeatureTestHostTests",
-      dependencies: ["DisplayoraCore", "DisplayoraFeatureTestHost", "DisplayoraUI"],
+      dependencies: ["DisplayoraCore", "DisplayoraFeatureTestHost", "DisplayoraUI", "DisplayoraTestSupport"],
       swiftSettings: strictSwiftSettings
     ),
   ],

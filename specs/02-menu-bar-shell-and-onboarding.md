@@ -144,7 +144,7 @@ stateDiagram-v2
   Registration retry re-reads welcome completion only after a new registry
   succeeds and never invokes display-status retry.
 - **DORA-02-007 — Display-status boundary.** `DisplayoraUI` declares a
-  `Sendable`, equatable `ShellDisplayStatus` with `loading`, `available`, 
+  `Sendable`, equatable `ShellDisplayStatus` with `loading`, `available`,
   `noDisplays`, and `failed(ShellDisplayStatusFailure)` cases.
   `ShellDisplayStatusFailure` contains a stable non-sensitive code and one
   novice-readable recovery message, not an underlying error or display
@@ -453,6 +453,15 @@ review, set the tracker to implementation `Verified` and code review
 `Approved`. The same command must then validate and pass using
 `specs/reviews/02-menu-bar-shell-and-onboarding-review.md`; a Verified row
 without that approved evidence must fail.
+
+### Manual evidence mapping
+
+| ID | Required evidence |
+|---|---|
+| `MANUAL-02-01` | Steps 1 and 3 below, recording one popover, one Settings window, menu-bar-only presence, and no runtime activation-policy change |
+| `MANUAL-02-07` | Steps 4 and 5, recording register/unregister, approval guidance, Login Items navigation, login launch, revocation, and final disabled state |
+| `MANUAL-02-08` | Steps 2 and 6 with VoiceOver, Full Keyboard Access, accessibility display options, 200% scaling, and confirmation that no TCC prompt appears |
+| `MANUAL-02-09` | The architecture commands and all seven steps on both native Intel and native Apple Silicon using the identical bundle |
 
 ### Manual macOS verification
 

@@ -612,6 +612,14 @@ The test identifiers map to executable evidence as follows:
 | `TEST-01-12` | temporary-output success and injected pre-install validation-failure integration tests for `build-app.sh` |
 | `TEST-01-15` | `make check-review SPEC=01` after tracker approval |
 
+### Manual evidence mapping
+
+| ID | Required evidence |
+|---|---|
+| `MANUAL-01-03` | Steps 1–5 below on the empty selected build, recording the menu-bar item, popover, Settings window, Dock absence, and clean quit |
+| `MANUAL-01-13` | The architecture commands and Steps 1–5 below on both native Intel and native Apple Silicon using the identical bundle |
+| `MANUAL-01-14` | The assistive-technology and display-option repetition described after Steps 1–5 |
+
 ### Manual native verification
 
 Perform the following once on a native Intel Mac and once on a native Apple

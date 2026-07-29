@@ -41,14 +41,22 @@ stateDiagram-v2
 ## Requirements
 
 - **DORA-08-001:** `KeyboardControlsFeature` is an optional standalone
-  `DisplayoraFeature` that reads commands only from `FeatureRegistry`.
-- **DORA-08-002:** Only installed, enabled commands are shown or routable.
-  Registry changes remove stale shortcuts and media-key mappings immediately.
-- **DORA-08-003:** Configurable global shortcuts use a public macOS hot-key
-  registration adapter that does not require Accessibility permission.
-- **DORA-08-004:** Recording rejects reserved system combinations, duplicates,
-  modifier-only input, and conflicts; it never captures ordinary typing after
-  recording ends.
+  `DisplayoraFeature` with the exact static `FeatureID` `keyboard-controls`.
+  It reads commands only from the current immutable `FeatureRegistry` snapshot.
+- **DORA-08-002:** Only installed, enabled commands in the current registry
+  snapshot are shown or routable. A registry replacement after registration
+  retry atomically replaces the command snapshot and immediately unregisters
+  shortcuts and media-key mappings whose command IDs are absent.
+- **DORA-08-003:** Configurable global shortcuts use an isolated adapter over
+  the public Carbon `RegisterEventHotKey` and `UnregisterEventHotKey` APIs.
+  Registration occurs only for the saved, validated combinations and does not
+  require Accessibility permission.
+- **DORA-08-004:** Recording rejects modifier-only input, missing modifiers,
+  and duplicate in-app assignments before registration. The previous binding
+  stays active until the new combination registers successfully; an operating
+  system registration failure is reported as unavailable/conflicting without
+  claiming an exhaustive hard-coded list of system-reserved shortcuts. The
+  recorder never captures ordinary typing after recording ends.
 - **DORA-08-005:** Native brightness/volume media keys are optional, off by
   default, and use an isolated event-tap adapter only when Accessibility is
   trusted.

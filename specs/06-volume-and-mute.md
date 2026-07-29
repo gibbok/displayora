@@ -127,7 +127,7 @@ placeholder, probe, or broken import. The module depends on no sibling.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-06-01` | `DORA-06-001`, `DORA-06-002`, `DORA-06-004` | Given reliable DDC, When the feature loads, Then verified monitor volume is selected and available mute is presented independently. | `TEST-06-01` |
+| `AC-06-01` | `DORA-06-001`, `DORA-06-002`, `DORA-06-004` | Given reliable DDC and multiple eligible outputs, When the feature loads or its commands run, Then verified monitor volume is selected, mute is presented independently, increments affect every eligible output, and toggle follows the all-muted rule. | `TEST-06-01` |
 | `AC-06-02` | `DORA-06-003`, `DORA-06-004`, `DORA-06-006` | Given unique, ambiguous, read-only, and changing routes, When association runs, Then only a stable one-to-one writable output is controlled. | `TEST-06-02` |
 | `AC-06-03` | `DORA-06-005`, `DORA-06-007`, `DORA-06-008` | Given rapid input and lifecycle changes, When operations race, Then latest confirmed state wins and no stale/wrong device changes. | `TEST-06-03`, `MANUAL-06-03` |
 | `AC-06-04` | `DORA-06-009` | Given VoiceOver and no supported mechanism, When UI is inspected, Then supported controls are labeled and unreliable UI is completely absent without permission. | `TEST-06-04`, `MANUAL-06-04` |

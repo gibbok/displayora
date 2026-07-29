@@ -130,6 +130,18 @@ make check-review SPEC=07
 git diff --check
 ```
 
+### Verification evidence
+
+| ID | Required evidence |
+|---|---|
+| `TEST-07-01` | `ResolutionModeOptionTests` with duplicate, HiDPI, logical/pixel, fixed/variable refresh, current, and stable-sort fixtures |
+| `TEST-07-02` | virtual-clock apply/Keep/15-second timeout tests with exact original-mode capture and one pending confirmation |
+| `TEST-07-03` | disconnect, sleep, quit, stale endpoint, failed apply, failed revert, and actual-mode refresh tests |
+| `MANUAL-07-03` | On native Intel and Apple Silicon, record original/selected/restored mode IDs, timeout, popover closure, disconnect, sleep, quit, failure guidance, and process architecture. |
+| `TEST-07-04` | confirmation focus order, countdown announcement, keyboard, and accessibility-semantic tests |
+| `MANUAL-07-04` | VoiceOver and Full Keyboard Access pass/fail for mode selection, Keep, Revert, and countdown |
+| `TEST-07-05` | `make check-review SPEC=07` against the final approved review report |
+
 Manually verify labels, Keep, timeout revert, popover closure, disconnect,
 sleep, quit, failure, keyboard, and VoiceOver on native Intel and Apple
 Silicon. Review evidence:

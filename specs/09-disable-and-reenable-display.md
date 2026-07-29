@@ -129,7 +129,7 @@ import. No sibling is required. Run `make check-architecture`.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-09-01` | `DORA-09-001`, `DORA-09-002`, `DORA-09-003` | Given available and missing symbols, When disable is requested, Then private use is isolated, runtime checked, and `.forAppOnly`. | `TEST-09-01` |
+| `AC-09-01` | `DORA-09-001`, `DORA-09-002`, `DORA-09-003` | Given available and missing symbols, When the feature loads or disable is requested, Then only the safe re-enable-all command is registered and private use is isolated, runtime checked, and `.forAppOnly`. | `TEST-09-01` |
 | `AC-09-02` | `DORA-09-004`, `DORA-09-005`, `DORA-09-006` | Given one or multiple usable displays, When disable/keep/timer/quit occur, Then the final display is protected and owned state restores. | `TEST-09-02`, `MANUAL-09-02` |
 | `AC-09-03` | `DORA-09-007`, `DORA-09-008`, `DORA-09-009` | Given lifecycle changes and partial failures, When private or fallback transactions run, Then rollback and confirmed recovery remain honest. | `TEST-09-03`, `MANUAL-09-03` |
 | `AC-09-04` | `DORA-09-010`, `DORA-09-011` | Given native Intel/Apple Silicon and assistive technology, When all states are exercised, Then behavior is recoverable and accessible without permission. | `MANUAL-09-04` |

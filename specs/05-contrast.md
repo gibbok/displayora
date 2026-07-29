@@ -42,7 +42,11 @@ stateDiagram-v2
 ## Requirements
 
 - **DORA-05-001:** `ContrastFeature` is an optional standalone module with the
-  exact static `FeatureID` `contrast`, conforming to `DisplayoraFeature`.
+  exact static `FeatureID` `contrast`, conforming to `DisplayoraFeature`. It
+  registers `contrast.increase-all` and `contrast.decrease-all`; each changes
+  every currently active supported display by five percentage points within
+  the selected mechanism's range and throws typed unavailable only when no
+  display can be adjusted.
 - **DORA-05-002:** Hardware contrast uses DDC/CI VCP code `0x12`; support
   requires a valid read whose reported maximum is greater than zero and a
   bounded no-op write/read verification of the current raw value. Capability

@@ -17,7 +17,7 @@ public func XCTAssertNil<T>(_ value: T?, _ message: String = "") {
 }
 
 public func XCTAssertThrowsError<T>(
-  _ expression: () throws -> T,
+  _ expression: @autoclosure () throws -> T,
   _ handler: (Error) -> Void = { _ in }
 ) {
   do {
@@ -28,14 +28,13 @@ public func XCTAssertThrowsError<T>(
   }
 }
 
-public func XCTFail(_ message: String) -> Never {
-  Issue.record(message)
-  fatalError(message)
+public func XCTFail(_ message: String) {
+  Issue.record(Comment(rawValue: message))
 }
 
 public func XCTUnwrap<T>(_ value: T?, _ message: String = "") throws -> T {
   guard let value else {
-    Issue.record(message.isEmpty ? "Expected a non-nil value" : message)
+    Issue.record(Comment(rawValue: message.isEmpty ? "Expected a non-nil value" : message))
     throw UnwrapError()
   }
   return value

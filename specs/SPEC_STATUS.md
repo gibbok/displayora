@@ -24,3 +24,13 @@ Code-review states: `Not reviewed`, `Reviewing`, `Changes requested`,
 | 09 | Disable and Re-enable Display | 01, 02, 03 | Ready | Not started | Not reviewed |
 | 10 | Night Comfort | 01, 02, 03 | Ready | Not started | Not reviewed |
 | 11 | Direct Distribution and Release | 01, 02, 03 | Ready | Not started | Not reviewed |
+
+## Pending platform validation
+
+- **Specification 01 — Project Foundation:** native Apple Silicon runtime and
+  accessibility validation is deferred until an Apple Silicon host is
+  available. The implementation may be merged and used as the baseline for
+  later specifications while remaining `In progress` with code review
+  `Reviewing`. Record the missing evidence in
+  `reviews/01-project-foundation-review.md` before advancing it to `Verified`
+  and `Approved`.

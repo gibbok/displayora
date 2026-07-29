@@ -7,7 +7,7 @@
 | ID | `01` |
 | Classification | Required platform |
 | Specification status | Ready |
-| Implementation status | Not started |
+| Implementation status | In progress — Apple Silicon validation pending |
 | Dependencies | None |
 
 ## Goal

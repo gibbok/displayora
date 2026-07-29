@@ -47,6 +47,9 @@ stateDiagram-v2
 
 - **DORA-10-001:** `NightComfortFeature` is an optional standalone
   `DisplayoraFeature` with the exact static `FeatureID` `night-comfort`.
+  Version 1 registers no global command: changing Off, Manual, or Schedule is
+  an explicit Settings action, so Keyboard Controls exposes no Night Comfort
+  shortcut.
 - **DORA-10-002:** Manual warmth is `0...100%` and maps to a finite, monotonic,
   endpoint-safe RGB contribution owned by Night Comfort.
 - **DORA-10-003:** Fixed schedules store local start/end minutes and enabled

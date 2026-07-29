@@ -13,8 +13,9 @@ standalone, incrementally committed specification suite.
 ## Local foundation build
 
 Specification 01 is implemented on the `spec-01` branch as a local-only Swift
-6 application. It has no external package dependencies, networking, telemetry,
-remote configuration, updater, launch-at-login behavior, or release
+6 application. Its production targets have no external package dependencies;
+tests use the pinned first-party `swift-testing` package. It has no networking,
+telemetry, remote configuration, updater, launch-at-login behavior, or release
 publication path.
 
 From a terminal with a compatible Swift 6 toolchain and macOS SDK:

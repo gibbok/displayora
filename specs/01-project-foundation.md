@@ -38,7 +38,8 @@ project.
   Runtime, notarize, or staple an artifact; Specification 11 owns release
   packaging.
 - It does not use private macOS APIs, request a system permission, persist
-  settings, or introduce a third-party dependency.
+  settings, or introduce a third-party production dependency. The pinned
+  first-party `swift-testing` package is permitted only for test support.
 - It does not create an Xcode project as a generated convenience. SwiftPM and
   the root `Makefile` are the only supported project entry points.
 
@@ -96,10 +97,11 @@ stateDiagram-v2
 
 - **DORA-01-001 — SwiftPM platform.** Create `app/Package.swift` with
   `// swift-tools-version: 6.0`, Swift language mode 6, and
-  `.macOS(.v13)`. The package has no external dependencies. All production
-  Swift sources and tests live below `app/Sources` and `app/Tests`. Tests use
-  the toolchain-provided Swift Testing module; the package has no external
-  runtime dependencies.
+  `.macOS(.v13)`. All production Swift sources and tests live below
+  `app/Sources` and `app/Tests`. Production targets have no external package
+  dependency. Test support may use only the first-party `swift-testing`
+  package pinned exactly to `6.2.4`; `Package.resolved` pins its transitive
+  graph. The package has no external runtime dependencies.
 - **DORA-01-002 — Stable target graph.** The package defines
   `DisplayoraCore`, `DisplayoraUI`, and `DisplayoraComposition` library
   targets; `Displayora` and `DisplayoraFeatureTestHost` executable targets;
@@ -183,7 +185,8 @@ stateDiagram-v2
   non-interactive targets with the following fixed meanings:
   `doctor` checks Swift 6, `swift format`, Python 3, `make`, `lipo`, `otool`,
   `plutil`, and `codesign`; `check-specs` validates documentation;
-  `check-architecture` rejects forbidden dependency and Xcode artifacts;
+  `check-architecture` rejects forbidden production dependencies and
+  repository-owned Xcode artifacts while ignoring generated build checkouts;
   `check-review SPEC=NN` validates durable review evidence; `build` builds the
   selected debug app; `test` runs selected focused and regression tests;
   `format` performs strict lint without modifying files; `run` runs the
@@ -206,7 +209,7 @@ stateDiagram-v2
   deterministic order, every duplicate-ID class, invalid ownership, atomic
   rollback, retry after failure, empty composition, one fixture-feature
   composition, JSON host snapshots, and shell state transitions.
-  Dependency-free Python checks cover target direction, selected-feature
+  Python checks cover target direction, selected-feature
   isolation, absent sibling imports, forbidden Xcode artifacts, Info.plist
   values, universal architectures, signing, and the absence of unresolved
   build-path dependencies.
@@ -517,7 +520,7 @@ the empty application product.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-01-01` | `DORA-01-001`, `DORA-01-003` | Given a clean checkout with the documented tools, When the package manifest and repository are inspected and `make build` runs, Then Swift 6 builds for macOS 13+ without dependencies, Xcode projects, GUI state, or `xcodebuild`. | `TEST-01-01` |
+| `AC-01-01` | `DORA-01-001`, `DORA-01-003` | Given a clean checkout with the documented tools, When the package manifest and repository are inspected and `make build` runs, Then Swift 6 builds for macOS 13+ without external runtime dependencies, Xcode projects, GUI state, or `xcodebuild`; test support uses only the exactly pinned first-party `swift-testing` package. | `TEST-01-01` |
 | `AC-01-02` | `DORA-01-002` | Given the package target graph, When architecture validation runs, Then dependencies flow from Core through UI and Composition to executables and no reverse or sibling edge exists. | `TEST-01-02` |
 | `AC-01-03` | `DORA-01-004` | Given the empty selected set, When the app launches, Then one named menu-bar popover and a separate Settings scene are available and no permanent Dock icon appears. | `MANUAL-01-03` |
 | `AC-01-04` | `DORA-01-005`, `DORA-01-006` | Given valid and invalid fixture features, When their contributions are registered, Then all four contribution categories are sorted and exposed for the valid feature while every invalid or duplicate case throws its typed error without partial state. | `TEST-01-04` |

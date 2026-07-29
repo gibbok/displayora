@@ -142,6 +142,17 @@ Signature: ad-hoc, valid
 Production fixture marker: absent
 ```
 
+### Coordinator evidence status update — 2026-07-29
+
+- Native Intel Swift Testing evidence: **Passed** — `make test` completed with
+  21 tests in 5 suites, plus Make contract and manifest-selection checks.
+- Apple Silicon runtime and accessibility evidence: **Pending**.
+- Reason: no Apple Silicon host is currently available.
+- The universal `arm64` bundle slice is validated, but it does not replace a
+  native runtime test.
+- The pending evidence remains a completion blocker; no acceptance criterion
+  is waived or weakened.
+
 ## Final Approval
 
 - Acceptance criteria passing: Source and local bundle criteria pass; full

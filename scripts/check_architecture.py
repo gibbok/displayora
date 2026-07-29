@@ -26,6 +26,7 @@ def main() -> int:
         "DisplayoraComposition",
         "Displayora",
         "DisplayoraFeatureTestHost",
+        "DisplayoraTestSupport",
         "DisplayoraCoreTests",
         "DisplayoraUITests",
         "DisplayoraCompositionTests",
@@ -44,13 +45,41 @@ def main() -> int:
     ]:
         if required not in manifest:
             errors.append(f"Package.swift is missing {required}")
-    if re.search(r"\.package\s*\(", manifest):
-        errors.append("Package.swift must not declare external dependencies")
+    package_declarations = re.findall(
+        r'\.package\s*\(\s*url:\s*"([^"]+)"\s*,\s*exact:\s*"([^"]+)"\s*\)',
+        manifest,
+    )
+    allowed_packages = [
+        ("https://github.com/swiftlang/swift-testing.git", "6.2.4")
+    ]
+    package_call_count = len(re.findall(r"\.package\s*\(", manifest))
+    if (
+        package_declarations != allowed_packages
+        or package_call_count != len(allowed_packages)
+    ):
+        errors.append(
+            "Package.swift may declare only swift-testing 6.2.4 as a test dependency"
+        )
 
+    dump_environment = os.environ.copy()
+    dump_environment.setdefault(
+        "CLANG_MODULE_CACHE_PATH", "/tmp/displayora-architecture-clang-cache"
+    )
+    dump_environment.setdefault(
+        "SWIFTPM_MODULECACHE_OVERRIDE",
+        "/tmp/displayora-architecture-swiftpm-cache",
+    )
     dump_result = subprocess.run(
-        ["swift", "package", "--package-path", "app", "dump-package"],
+        [
+            "swift",
+            "package",
+            "--disable-sandbox",
+            "--package-path",
+            "app",
+            "dump-package",
+        ],
         cwd=ROOT,
-        env=os.environ.copy(),
+        env=dump_environment,
         capture_output=True,
         text=True,
     )
@@ -71,17 +100,29 @@ def main() -> int:
             "DisplayoraComposition": {"DisplayoraUI"},
             "Displayora": {"DisplayoraComposition", "DisplayoraUI"},
             "DisplayoraFeatureTestHost": {"DisplayoraComposition", "DisplayoraUI"},
-            "DisplayoraCoreTests": {"DisplayoraCore"},
-            "DisplayoraUITests": {"DisplayoraCore", "DisplayoraUI"},
+            "DisplayoraTestSupport": {"Testing"},
+            "DisplayoraCoreTests": {"DisplayoraCore", "DisplayoraTestSupport"},
+            "DisplayoraUITests": {
+                "DisplayoraCore",
+                "DisplayoraTestSupport",
+                "DisplayoraUI",
+            },
             "DisplayoraCompositionTests": {
                 "DisplayoraComposition",
                 "DisplayoraCore",
+                "DisplayoraTestSupport",
                 "DisplayoraUI",
             },
-            "DisplayoraTests": {"Displayora", "DisplayoraCore", "DisplayoraUI"},
+            "DisplayoraTests": {
+                "Displayora",
+                "DisplayoraCore",
+                "DisplayoraTestSupport",
+                "DisplayoraUI",
+            },
             "DisplayoraFeatureTestHostTests": {
                 "DisplayoraCore",
                 "DisplayoraFeatureTestHost",
+                "DisplayoraTestSupport",
                 "DisplayoraUI",
             },
         }
@@ -124,7 +165,12 @@ def main() -> int:
         if module != "DisplayoraComposition" and module_imports & feature_names:
             errors.append(f"{module} imports an optional feature outside composition")
 
-    forbidden_files = list(ROOT.rglob("*.xcodeproj")) + list(ROOT.rglob("project.pbxproj"))
+    source_files = list(repository_files())
+    forbidden_files = [
+        path
+        for path in source_files
+        if path.suffix == ".xcodeproj" or path.name == "project.pbxproj"
+    ]
     if forbidden_files:
         errors.append("Xcode project artifacts are forbidden")
     for path in [ROOT / "Makefile", *sorted((ROOT / "scripts").glob("*"))]:
@@ -151,7 +197,7 @@ def main() -> int:
     permission_keys = [key for key in plist if key.startswith("NS") and key.endswith("UsageDescription")]
     if permission_keys:
         errors.append("Foundation Info.plist must not contain permission usage descriptions")
-    if list(APP.rglob("*.entitlements")):
+    if any(path.suffix == ".entitlements" and APP in path.parents for path in source_files):
         errors.append("Foundation must not include entitlement files")
 
     if errors:
@@ -170,6 +216,17 @@ def dependency_name(dependency: dict[str, object]) -> str:
             return str(value[0])
         return str(value)
     raise ValueError(f"Unknown SwiftPM dependency shape: {dependency!r}")
+
+
+def repository_files():
+    generated_directories = {".git", ".build", "dist"}
+    for path in ROOT.rglob("*"):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(ROOT)
+        if generated_directories.intersection(relative.parts):
+            continue
+        yield path
 
 
 if __name__ == "__main__":

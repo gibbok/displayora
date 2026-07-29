@@ -190,6 +190,12 @@ stateDiagram-v2
   bundle checks; `verify-feature FEATURE=<name>` performs the isolated verification scope
   defined by DORA-01-010; and `clean` removes only known SwiftPM and bundle outputs
   below `app/.build` and `dist`.
+
+  `doctor` is a terminal-tool check only: it does not require Xcode, an Xcode
+  project, Xcode GUI state, `xcodebuild`, or the XCTest module. XCTest
+  availability is validated by `make test` because it is needed only by the
+  focused test targets, not by the production build, bundle, or installation
+  workflow.
 - **DORA-01-012 — Compiler quality gates.** Every debug, test, per-architecture
   release, and feature-host build uses warnings as errors and complete strict
   concurrency checking. Package language mode remains Swift 6. `swift format
@@ -530,8 +536,11 @@ the empty application product.
 
 ### Automated commands
 
-Run from the repository root with Xcode Command Line Tools selected. These
-commands are exact; none may be replaced with `xcodebuild`.
+Run from the repository root with a Swift 6 command-line toolchain selected.
+These commands are exact; none may be replaced with `xcodebuild`. The doctor,
+production build, bundle, and installation workflows do not require Xcode GUI
+state. A test run additionally needs the XCTest module used by the focused
+test targets.
 
 ```sh
 make doctor

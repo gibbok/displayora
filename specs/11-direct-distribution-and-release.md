@@ -170,6 +170,17 @@ make check-review SPEC=11
 git diff --check
 ```
 
+### Verification evidence
+
+| ID | Required evidence |
+|---|---|
+| `TEST-11-01` | release fixture tests for empty/selected/unknown/unimplemented feature input, separate slice commands, exact architectures, plist values, and selected composition |
+| `TEST-11-02` | command-construction and failure fixtures for nested signing, Hardened Runtime, DMG contents, `notarytool`, `stapler`, and Gatekeeper; fixtures never claim real notarization |
+| `MANUAL-11-02` | Record signing verification, entitlements, Accepted request ID, outer-DMG staple validation, Gatekeeper assessment, clean-account offline launch, and artifact SHA-256. |
+| `TEST-11-03` | version/build validation, clean/exact-commit guard, deterministic adjacent manifests, secret-redaction, injected-stage failure, cleanup, and atomic-publication tests |
+| `MANUAL-11-04` | Install the identical final DMG on native Intel and Apple Silicon; record OS/hardware, process architecture, menu-bar/Settings/Dock behavior, included/omitted feature checks, accessibility pass/fail, and clean quit. |
+| `TEST-11-05` | `make check-review SPEC=11` against the final approved review report |
+
 For a real candidate run the documented `make release` command, verify app
 signatures and Hardened Runtime, outer-DMG notarization and stapling,
 Gatekeeper assessment, adjacent checksums/manifests, and native Intel/Apple

@@ -6,6 +6,15 @@ export DISPLAYORA_FEATURES
 SWIFT_FLAGS := -Xswiftc -warnings-as-errors -Xswiftc -strict-concurrency=complete
 PACKAGE_FLAGS := --package-path app
 
+# Command Line Tools may install multiple SDKs. SwiftPM's default SDK can be
+# newer than the compiler; prefer the compatible 15.4 SDK when it is present.
+SDKROOT ?= $(shell if [ -d /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk ]; then echo /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk; fi)
+CLANG_MODULE_CACHE_PATH ?= /tmp/displayora-clang-cache
+SWIFTPM_MODULECACHE_OVERRIDE ?= /tmp/displayora-swiftpm-cache
+SWIFT_BUILD_MACROS ?= 1
+export SDKROOT CLANG_MODULE_CACHE_PATH SWIFTPM_MODULECACHE_OVERRIDE SWIFT_BUILD_MACROS
+SWIFT_SDK_FLAGS := $(if $(SDKROOT),--sdk $(SDKROOT),) --disable-experimental-prebuilts
+
 .PHONY: doctor check-specs check-architecture check-review build test format run bundle \
 	install run-installed run-ui-harness test-install verify verify-feature clean
 
@@ -22,10 +31,10 @@ check-review:
 	@python3 scripts/check_review.py "$(SPEC)"
 
 build:
-	swift build $(PACKAGE_FLAGS) $(SWIFT_FLAGS)
+	swift build $(PACKAGE_FLAGS) $(SWIFT_SDK_FLAGS) $(SWIFT_FLAGS)
 
 test:
-	swift test $(PACKAGE_FLAGS) $(SWIFT_FLAGS)
+	swift test $(PACKAGE_FLAGS) $(SWIFT_SDK_FLAGS) $(SWIFT_FLAGS)
 	@python3 scripts/test_make_contract.py
 	@python3 scripts/test_manifest_selection.py
 
@@ -33,7 +42,7 @@ format:
 	swift format lint --recursive --strict app/Package.swift app/Sources app/Tests
 
 run:
-	swift run $(PACKAGE_FLAGS) $(SWIFT_FLAGS) Displayora
+	swift run $(PACKAGE_FLAGS) $(SWIFT_SDK_FLAGS) $(SWIFT_FLAGS) Displayora
 
 bundle:
 	@scripts/build-app.sh

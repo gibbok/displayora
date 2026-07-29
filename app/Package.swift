@@ -81,7 +81,9 @@ let package = Package(
     .executable(name: "Displayora", targets: ["Displayora"]),
     .executable(name: "DisplayoraFeatureTestHost", targets: ["DisplayoraFeatureTestHost"]),
   ],
-  dependencies: [],
+  dependencies: [
+    .package(url: "https://github.com/swiftlang/swift-testing.git", exact: "6.2.4")
+  ],
   targets: [
     .target(
       name: "DisplayoraCore",
@@ -109,7 +111,7 @@ let package = Package(
     ),
     .target(
       name: "DisplayoraTestSupport",
-      dependencies: [],
+      dependencies: [.product(name: "Testing", package: "swift-testing")],
       path: "Tests/DisplayoraTestSupport",
       swiftSettings: strictSwiftSettings
     ),

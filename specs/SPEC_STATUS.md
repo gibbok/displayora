@@ -1,7 +1,7 @@
 # Displayora Specification Status
 
 This tracker is authoritative. Update one row at a time according to
-[specs/README.md](specs/README.md).
+[README.md](README.md).
 
 Specification states: `Planned`, `Drafting`, `Ready`, `Blocked`.
 
@@ -23,4 +23,4 @@ Code-review states: `Not reviewed`, `Reviewing`, `Changes requested`,
 | 08 | Keyboard Controls | 01, 02, 03 | Ready | Not started | Not reviewed |
 | 09 | Disable and Re-enable Display | 01, 02, 03 | Ready | Not started | Not reviewed |
 | 10 | Night Comfort | 01, 02, 03 | Ready | Not started | Not reviewed |
-| 11 | Direct Distribution and Release | 01, 02, 03 | Planned | Not started | Not reviewed |
+| 11 | Direct Distribution and Release | 01, 02, 03 | Ready | Not started | Not reviewed |

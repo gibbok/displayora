@@ -45,7 +45,11 @@ stateDiagram-v2
 ## Requirements
 
 - **DORA-09-001:** `DisplayStateFeature` is an optional standalone module with
-  the exact static `FeatureID` `disable-and-reenable-display`.
+  the exact static `FeatureID` `disable-and-reenable-display`. It registers
+  only the safe recovery command
+  `disable-and-reenable-display.reenable-all`; disabling a display is never a
+  global shortcut because it requires the confirmation and final-display
+  guard below.
 - **DORA-09-002:** The LightsOut-inspired private call
   `CGSConfigureDisplayEnabled` exists only inside
   `PrivateDisplayEnableAdapter`; symbols are resolved at runtime, signatures

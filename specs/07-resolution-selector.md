@@ -44,7 +44,10 @@ stateDiagram-v2
 
 - **DORA-07-001:** `ResolutionFeature` is an optional standalone
   `DisplayoraFeature` module with the exact static `FeatureID`
-  `resolution-selector`, using public Core Graphics APIs.
+  `resolution-selector`, using public Core Graphics APIs. Version 1 registers
+  no global command because a safe mode change requires an explicit display
+  and mode choice plus confirmation; Keyboard Controls therefore exposes no
+  Resolution shortcut.
 - **DORA-07-002:** Modes come from `CGDisplayCopyAllDisplayModes`, are filtered
   to usable non-duplicate modes, and are keyed by complete mode identity rather
   than display text.

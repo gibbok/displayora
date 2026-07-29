@@ -45,8 +45,11 @@ stateDiagram-v2
 
 - **DORA-04-001:** `BrightnessFeature` is its own SwiftPM module, has the exact
   static `FeatureID` `brightness`, conforms to `DisplayoraFeature`, and
-  registers only brightness controls, settings, capability probes, and
-  commands.
+  registers only brightness controls, settings, capability probes, and the
+  commands `brightness.increase-all` and `brightness.decrease-all`. Each
+  command adjusts every currently active supported display by five percentage
+  points, clamps per-display values to the mechanism's valid range, and throws
+  typed unavailable only when no display can be adjusted.
 - **DORA-04-002:** Hardware brightness uses DDC/CI VCP code `0x10`; support is
   accepted only after a valid capabilities/read probe whose reported maximum
   is greater than zero and a bounded no-op write/read verification of the

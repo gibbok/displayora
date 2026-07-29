@@ -33,6 +33,7 @@ self-review passes, and a requirement-to-acceptance mapping.
 | Area | Finding | Resolution |
 |---|---|---|
 | Status tracker | The tracker linked to `specs/README.md` as though it were outside the `specs` directory. | Corrected the relative link to `README.md`. |
+| Authoring validation | The pre-implementation workflow required `make check-specs`, although Specification 01 has not yet created the Makefile or validator and temporary tooling is out of scope. | Added an explicit Markdown-only checklist for the specification phase and made `make check-specs` mandatory after Specification 01 implements it. |
 | Specification 11 | Its metadata said `Ready`, while the authoritative tracker said `Planned`. | Marked Specification 11 `Ready` in the tracker. |
 | Feature identity | Optional modules had canonical selection slugs but did not explicitly lock their static `FeatureID` values. | Made every feature ID exactly equal to its canonical selection slug and documented that invariant in Specification 01. |
 | Keyboard commands | Several feature specifications mentioned commands without defining stable IDs or multi-display behavior. | Defined the Brightness, Contrast, Volume/Mute, and safe re-enable commands, including all-eligible-display semantics; explicitly omitted unsafe or ambiguous v1 commands for Resolution and Night Comfort. |

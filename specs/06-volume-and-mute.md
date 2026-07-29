@@ -43,7 +43,12 @@ stateDiagram-v2
 
 - **DORA-06-001:** `VolumeFeature` is an optional standalone
   `DisplayoraFeature` module with the exact static `FeatureID`
-  `volume-and-mute`.
+  `volume-and-mute`. It registers `volume-and-mute.increase-all`,
+  `volume-and-mute.decrease-all`, and `volume-and-mute.toggle-mute-all`.
+  Increment commands change every currently active, confidently associated
+  supported output by five percentage points. Toggle mutes all targets unless
+  all are already muted, in which case it unmutes all; no eligible target is a
+  typed unavailable result.
 - **DORA-06-002:** DDC volume uses continuous VCP `0x62` and requires a valid
   nonzero reported maximum. DDC mute uses VCP `0x8D` only when probing proves
   the simple MCCS values `0x01` (mute) and `0x02` (unmute) are readable and

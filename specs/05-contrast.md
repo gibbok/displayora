@@ -41,10 +41,13 @@ stateDiagram-v2
 
 ## Requirements
 
-- **DORA-05-001:** `ContrastFeature` is an optional standalone module
-  conforming to `DisplayoraFeature`.
-- **DORA-05-002:** Hardware contrast uses probed and verified DDC/CI VCP code
-  `0x12`; capability claims alone are insufficient.
+- **DORA-05-001:** `ContrastFeature` is an optional standalone module with the
+  exact static `FeatureID` `contrast`, conforming to `DisplayoraFeature`.
+- **DORA-05-002:** Hardware contrast uses DDC/CI VCP code `0x12`; support
+  requires a valid read whose reported maximum is greater than zero and a
+  bounded no-op write/read verification of the current raw value. Capability
+  claims, malformed ranges, and a successful write without read-back are
+  insufficient.
 - **DORA-05-003:** Reliable hardware wins; otherwise the platform may select
   safe software fallback, temporary failure, or unsupported.
 - **DORA-05-004:** Software contrast submits an owned, monotonic 256-sample RGB
@@ -53,7 +56,11 @@ stateDiagram-v2
   `75...125%`; curve generation preserves endpoints, finite values, monotonic
   order, and highlight/shadow headroom. Invalid curves never apply.
 - **DORA-05-006:** Slider changes use 75 ms debounce, at most ten writes per
-  second, and latest-wins cancellation.
+  second, and latest-wins cancellation. Hardware mode displays
+  `round(rawCurrent / rawMaximum * 100)` and writes
+  `round(percent / 100 * rawMaximum)` over `0...100%`; read-back must be within
+  one normalized percentage point. Software mode uses the separate
+  `75...125%` range from DORA-05-005.
 - **DORA-05-007:** HDR or unknown transform safety restores and disables the
   software contribution; DDC remains independently eligible.
 - **DORA-05-008:** Reconnect and wake reprobe. Removing the last software owner,

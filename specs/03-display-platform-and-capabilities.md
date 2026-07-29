@@ -666,3 +666,9 @@ snapshots, and forbidden dependency/API scans. It added deterministic fakes,
 virtual-clock concurrency and hot-plug tests, exact Specification 02 mapping,
 Given/When/Then traceability, native Intel/Apple Silicon and HDR procedures,
 and the independent Codex review plus automatic-repair gate.
+
+## Pull Request Handoff
+
+Open a dedicated draft PR with a plain-language platform summary, identity and
+capability boundaries, color-transform recovery invariants, hardware review
+risks, and the validation evidence that still needs human review.

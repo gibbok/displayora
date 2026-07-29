@@ -158,6 +158,18 @@ make check-review SPEC=09
 git diff --check
 ```
 
+### Verification evidence
+
+| ID | Required evidence |
+|---|---|
+| `TEST-09-01` | private-adapter symbol/signature/scope fixtures proving runtime absence is typed and private calls cannot escape the adapter |
+| `TEST-09-02` | virtual-clock final-display guard, confirmation, Keep Disabled, 30-second recovery, idempotent re-enable, quit, and shutdown tests |
+| `MANUAL-09-02` | On native Intel and Apple Silicon with at least two usable displays, record final-display rejection, countdown recovery, Keep Disabled, re-enable, quit restoration, and process architecture. |
+| `TEST-09-03` | topology reconciliation and transaction-failure tests proving fallback starts only from confirmed unchanged topology and partial fallback rolls back in reverse order |
+| `MANUAL-09-03` | Record private-path unavailable/error behavior, fallback result, unplug/sleep/topology change, retry, persistent guidance, and confirmed final topology on both architectures. |
+| `MANUAL-09-04` | VoiceOver and Full Keyboard Access pass/fail for destructive confirmation, Cancel-first focus, countdown, recovery, and errors on native Intel and Apple Silicon. |
+| `TEST-09-05` | `make check-review SPEC=09` against the final approved review report |
+
 Manually verify final-display protection, timed recovery, keep/re-enable,
 sleep, unplug, quit, private-path absence, fallback rollback, keyboard, and
 VoiceOver on native Intel and Apple Silicon. Review report:

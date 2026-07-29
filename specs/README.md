@@ -14,7 +14,11 @@ code.
 3. The author starts from [TEMPLATE.md](TEMPLATE.md), resolves every product and
    implementation choice, and records two self-review/revision passes.
 4. The author sets the tracker row to `Ready`.
-5. The coordinator runs `make check-specs` and `git diff --check`.
+5. During the specification-only phase, the coordinator manually checks the
+   required headings, metadata, links, requirement-to-criterion traceability,
+   unresolved placeholders, and cross-specification contracts, then runs
+   `git diff --check`. After Specification 01 implements the repository
+   validators, the coordinator also runs `make check-specs`.
 6. The coordinator commits that specification.
 7. The coordinator pushes a dedicated `agent/spec-NN-<slug>` branch and opens
    a draft pull request using [PR_TEMPLATE.md](PR_TEMPLATE.md).
@@ -82,6 +86,10 @@ means there are no controls, placeholders, shortcuts, settings, registrations,
 imports, or failed checks associated with the feature.
 
 ## Validation
+
+The `make` commands below are normative implementation requirements. They
+become executable when Specification 01 creates the Makefile and validation
+scripts; until then, specification review is Markdown-only as described above.
 
 ```sh
 make check-specs

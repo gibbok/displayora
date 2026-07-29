@@ -37,13 +37,16 @@ stateDiagram-v2
     ScheduledInactive --> ScheduledActive: start time
     ScheduledActive --> ScheduledInactive: end time
     ScheduledActive --> Suspended: HDR or display unavailable
-    Suspended --> ScheduledActive: safe again
+    Suspended --> Manual: safe again, Manual selected
+    Suspended --> ScheduledActive: safe again, schedule active
+    Suspended --> ScheduledInactive: schedule becomes inactive
+    Suspended --> Off: user turns feature off
 ```
 
 ## Requirements
 
 - **DORA-10-001:** `NightComfortFeature` is an optional standalone
-  `DisplayoraFeature`.
+  `DisplayoraFeature` with the exact static `FeatureID` `night-comfort`.
 - **DORA-10-002:** Manual warmth is `0...100%` and maps to a finite, monotonic,
   endpoint-safe RGB contribution owned by Night Comfort.
 - **DORA-10-003:** Fixed schedules store local start/end minutes and enabled

@@ -1,85 +1,83 @@
-# Feature Specification Review
+# Repository-Wide Specification Review
 
 ## Scope
 
-This review covers Specifications 04–10:
+This review covers every Markdown document under `specs/`, including
+Specifications 01–11, the workflow and review policies, the status tracker,
+templates, and implementation-review guidance. Application implementation,
+scripts, and other non-Markdown files are intentionally out of scope.
 
-| ID | Feature | Specification status | Implementation status |
+| IDs | Area | Specification status | Implementation status |
 |---|---|---|---|
-| 04 | Brightness | Ready | Not started |
-| 05 | Contrast | Ready | Not started |
-| 06 | Volume and Mute | Ready | Not started |
-| 07 | Resolution Selector | Ready | Not started |
-| 08 | Keyboard Controls | Ready | Not started |
-| 09 | Disable and Re-enable Display | Ready | Not started |
-| 10 | Night Comfort | Ready | Not started |
+| 01–03 | Required platform | Ready | Not started |
+| 04–10 | Optional standalone features | Ready | Not started |
+| 11 | Required direct release | Ready | Not started |
 
-## Common format review
+## Review Method
 
-All seven specifications use the same standing format:
+The review used two passes:
 
-1. Metadata
-2. Goal
-3. Non-Goals
-4. User Experience and States
-5. Requirements
-6. Interfaces and Data Flow
-7. Failure and Recovery
-8. Accessibility and Permissions
-9. Platform Considerations
-10. Standalone and Omission Behavior
-11. Acceptance Criteria and Traceability
-12. Verification
-13. Code Quality and Automatic Review
-14. Author Self-Review
-15. Pull Request Handoff
+1. Structural and traceability review: metadata, dependencies, stable
+   requirement IDs, acceptance-criterion coverage, relative Markdown links,
+   unresolved placeholders, canonical feature slugs, and tracker consistency.
+2. Implementation-readiness review: module boundaries, stable persisted IDs,
+   value normalization, failure and recovery semantics, permission behavior,
+   command routing, hardware-specific assumptions, and exact release inputs
+   and outputs.
 
-Each requirement has a stable feature-scoped identifier, each acceptance
-criterion maps to requirements, and each feature explicitly defines standalone
-behavior and omission behavior.
+Every numbered specification retains the required sections, documented
+self-review passes, and a requirement-to-acceptance mapping.
 
-## Findings and resolutions
+## Findings and Resolutions
 
-| Feature | Finding | Resolution |
+| Area | Finding | Resolution |
 |---|---|---|
-| Brightness | Hardware and software control can have different lifecycle behavior. | The specification distinguishes verified DDC control from software dimming and defines restoration, HDR handling, reconnect behavior, and persistence boundaries. |
-| Contrast | A software contrast curve could clip highlights or crush shadows. | The specification requires bounded, finite, monotonic, endpoint-safe curves with explicit headroom validation. |
-| Volume and Mute | Display audio can be associated with the wrong output device. | The specification requires a stable one-to-one association and omits the control when confidence is insufficient. |
-| Resolution Selector | A failed or abandoned mode change can make the display unusable. | The specification requires exact original-mode capture, one confirmation at a time, timed revert, and honest restoration failure state. |
-| Keyboard Controls | Global shortcuts and native media keys have different permission requirements. | The specification keeps configurable shortcuts permission-free and gates optional media-key interception behind explicit accessibility consent. |
-| Disable and Re-enable Display | Disabling the last usable display or partially applying recovery can strand the user. | The specification protects the final usable display and defines timed recovery, transactional fallback, topology reconciliation, and persistent failure guidance. |
-| Night Comfort | Fixed local schedules are vulnerable to overnight, daylight-saving, and timezone edge cases. | The specification defines equal-time, overnight, clock, timezone, daylight-saving, sleep, and wake behavior explicitly. |
+| Status tracker | The tracker linked to `specs/README.md` as though it were outside the `specs` directory. | Corrected the relative link to `README.md`. |
+| Specification 11 | Its metadata said `Ready`, while the authoritative tracker said `Planned`. | Marked Specification 11 `Ready` in the tracker. |
+| Feature identity | Optional modules had canonical selection slugs but did not explicitly lock their static `FeatureID` values. | Made every feature ID exactly equal to its canonical selection slug and documented that invariant in Specification 01. |
+| Keyboard commands | Several feature specifications mentioned commands without defining stable IDs or multi-display behavior. | Defined the Brightness, Contrast, Volume/Mute, and safe re-enable commands, including all-eligible-display semantics; explicitly omitted unsafe or ambiguous v1 commands for Resolution and Night Comfort. |
+| DDC continuous values | Brightness, Contrast, and Volume used user-facing percentages without defining conversion from a monitor's device-specific maximum. | Defined nonzero-range validation, raw-to-percent and percent-to-raw conversion, no-op probe verification, and one-percentage-point normalized read-back tolerance. |
+| DDC mute | “Supported mute control” left the VCP code and values to implementation guesswork. | Locked mute to VCP `0x8D`, values `0x01` and `0x02`, and rejected unknown or complex vendor semantics. |
+| Shortcut conflicts | A hard-coded notion of every reserved system shortcut is neither complete nor durable. | Locked the adapter to public Carbon hot-key registration, preserved the prior binding until replacement succeeds, and made operating-system registration failure authoritative. |
+| Registry replacement | Runtime wording implied mutable command registration, while Specification 01 exposes immutable snapshots. | Defined atomic command-snapshot replacement only when the registry itself is replaced after retry. |
+| Night Comfort | The state diagram could enter `Suspended` from Manual but could recover only to scheduled-active state. | Added recovery to Manual, scheduled-active, scheduled-inactive, and Off according to current intent. |
+| Direct release | The release specification did not provide an exact automation entry point or deterministic publication paths. | Added a validated non-interactive `make release` contract and fixed DMG and manifest output paths. |
 
-No unresolved product decision or blocking technical inconsistency remains.
-The specifications remain independent of optional sibling features and retain
-their existing macOS, accessibility, recovery, and omission guarantees.
+## Cross-Specification Decisions
 
-## Second-pass findings
+- Optional modules depend only on Specifications 01–03 and Apple frameworks;
+  no optional feature imports or discovers a sibling.
+- Canonical feature slugs and static feature IDs are the same value.
+- Commands that affect displays use explicit stable IDs. In v1, Brightness,
+  Contrast, and Volume/Mute act on all currently active eligible displays.
+- Resolution changes remain UI-only because a shortcut cannot safely choose a
+  display and mode or bypass confirmation.
+- Display disable remains confirmation-only; only re-enable-all is routable as
+  a global safety command.
+- Night Comfort mode changes remain Settings-only in v1 because a toggle would
+  be ambiguous among Off, Manual, and Schedule.
+- DDC support requires verified read/write behavior, not a capability claim or
+  successful write alone.
+- The private display-enable path in Specification 09 remains the highest-risk
+  area. Runtime rejection, final-display protection, timed recovery,
+  transactional fallback, and native Intel/Apple Silicon evidence are
+  mandatory; implementation must block rather than weaken those gates.
+- Specification 11 extends the Makefile only when release implementation
+  begins. Secrets remain in Keychain and are never command arguments, files,
+  logs, or repository content.
 
-The second pass found and corrected three documentation inconsistencies:
+## Implementation Handoff
 
-1. Specifications 04–10 were marked `Planned` in the authoritative tracker
-   even though their metadata declared them `Ready`.
-2. Specification 01 used `volume`, `resolution`, and `display-state` as
-   selection slugs, while the corresponding feature specifications used
-   `volume-and-mute`, `resolution-selector`, and
-   `disable-and-reenable-display`.
-3. The Night Comfort state diagram did not show Manual mode entering the HDR
-   or unavailable suspended state, despite the requirement covering both
-   Manual and Schedule modes.
+Implement in the dependency and risk order documented by the root README.
+Each numbered implementation remains isolated in its own draft pull request
+and must include focused tests, regression evidence, the durable independent
+review report, and its tracker update. A missing platform capability or a
+finding that requires a new product decision sets the implementation to
+`Blocked`; Codex must not invent behavior to make a check pass.
 
-All three inconsistencies are resolved in this PR.
+## Review Result
 
-## Implementation handoff
-
-Implementation is intentionally out of scope for this review. When development
-starts, each specification must be implemented in its own dedicated draft pull
-request. The implementation pull request must include the feature, its tests,
-the required review record, and the corresponding tracker update. This review
-does not create or imply those implementation pull requests.
-
-## Review result
-
-The seven specifications are consistent, internally coherent, and ready for
-implementation. This document is the single documentation review for the
-feature-specification set.
+The specification suite is internally consistent and sufficiently explicit
+for staged Codex implementation. All numbered specifications are `Ready`;
+all implementations remain `Not started`. This review changes documentation
+only and does not create application code or development tooling.

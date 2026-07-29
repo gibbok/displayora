@@ -144,7 +144,7 @@ stateDiagram-v2
   Registration retry re-reads welcome completion only after a new registry
   succeeds and never invokes display-status retry.
 - **DORA-02-007 — Display-status boundary.** `DisplayoraUI` declares a
-  `Sendable`, equatable `ShellDisplayStatus` with `loading`, `available`, 
+  `Sendable`, equatable `ShellDisplayStatus` with `loading`, `available`,
   `noDisplays`, and `failed(ShellDisplayStatusFailure)` cases.
   `ShellDisplayStatusFailure` contains a stable non-sensitive code and one
   novice-readable recovery message, not an underlying error or display

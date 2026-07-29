@@ -134,7 +134,7 @@ requires a sibling feature. Run `make check-architecture` to verify this.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-04-01` | `DORA-04-001`, `DORA-04-003` | Given hardware, fallback, failure, and unsupported probes, When Brightness loads, Then exactly the selected reliable state and UI appear. | `TEST-04-01` |
+| `AC-04-01` | `DORA-04-001`, `DORA-04-003` | Given hardware, fallback, failure, unsupported probes, and multiple displays, When Brightness loads or its commands run, Then exactly the selected reliable UI appears and both commands adjust all eligible displays by five points. | `TEST-04-01` |
 | `AC-04-02` | `DORA-04-002`, `DORA-04-005` | Given rapid slider input, When DDC succeeds or fails, Then writes are bounded, latest-wins, verified, and honestly presented. | `TEST-04-02` |
 | `AC-04-03` | `DORA-04-004`, `DORA-04-006`, `DORA-04-008` | Given SDR/HDR, sleep, disconnect, and quit, When software dimming changes state, Then the owned contribution applies or restores without drift. | `TEST-04-03` |
 | `AC-04-04` | `DORA-04-007`, `DORA-04-009` | Given persistent and connection-scoped displays, When values restore and VoiceOver navigates, Then only safe identity is persisted and all state is announced. | `TEST-04-04`, `MANUAL-04-04` |

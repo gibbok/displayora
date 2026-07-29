@@ -56,7 +56,7 @@ stateDiagram-v2
 - **DORA-11-002:** Build separate Swift 6 release slices for `arm64` and
   `x86_64`, combine with `lipo`, and verify exactly those architectures.
 - **DORA-11-003:** Assemble `Displayora.app` with bundle identifier
-  `com.displayora.Displayora`, a release-input version containing two or three
+  `com.displayora.Displayora`, a release-input version containing exactly three
   dot-separated non-negative integers, a positive decimal build number, and no
   development paths or unintended resources. Release input records the exact
   clean-worktree commit being packaged; a dirty or mismatched checkout fails
@@ -96,7 +96,7 @@ stateDiagram-v2
 The public release entry point is:
 
 ```sh
-make release VERSION=<major.minor[.patch]> BUILD=<positive-integer> \
+make release VERSION=<major.minor.patch> BUILD=<positive-integer> \
   FEATURES=<comma-separated-canonical-slugs> \
   SIGNING_IDENTITY=<developer-id-application-name> \
   NOTARY_PROFILE=<keychain-profile>

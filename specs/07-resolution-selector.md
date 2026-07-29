@@ -118,7 +118,7 @@ sibling dependency.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-07-01` | `DORA-07-001`, `DORA-07-002`, `DORA-07-003` | Given duplicate, HiDPI, variable, and current modes, When options render, Then they are uniquely keyed, sorted, and clearly labeled. | `TEST-07-01` |
+| `AC-07-01` | `DORA-07-001`, `DORA-07-002`, `DORA-07-003` | Given duplicate, HiDPI, variable, and current modes, When options render, Then they are uniquely keyed, sorted, clearly labeled, and no unsafe mode-change command is registered. | `TEST-07-01` |
 | `AC-07-02` | `DORA-07-004`, `DORA-07-005`, `DORA-07-006` | Given a valid selection, When it applies, Then one 15-second confirmation controls commit or exact revert. | `TEST-07-02` |
 | `AC-07-03` | `DORA-07-007`, `DORA-07-008` | Given timeout, sleep, disconnect, quit, and revert failure, When confirmation is unresolved, Then restoration is attempted and actual state is reported honestly. | `TEST-07-03`, `MANUAL-07-03` |
 | `AC-07-04` | `DORA-07-009` | Given keyboard and VoiceOver, When confirmation counts down, Then actions and essential timing remain operable and concise without permission. | `TEST-07-04`, `MANUAL-07-04` |

@@ -121,7 +121,7 @@ rejects sibling coupling.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-05-01` | `DORA-05-001`, `DORA-05-002`, `DORA-05-003` | Given all probe outcomes, When the feature loads, Then one reliable mechanism or no row is selected. | `TEST-05-01` |
+| `AC-05-01` | `DORA-05-001`, `DORA-05-002`, `DORA-05-003` | Given all probe outcomes and multiple displays, When the feature loads or its commands run, Then one reliable mechanism or no row is selected and both commands adjust all eligible displays by five points. | `TEST-05-01` |
 | `AC-05-02` | `DORA-05-004`, `DORA-05-005` | Given every allowed percentage, When a curve is generated and composed, Then it is finite, monotonic, bounded, endpoint-preserving, and clipping-safe. | `TEST-05-02` |
 | `AC-05-03` | `DORA-05-006`, `DORA-05-007`, `DORA-05-008` | Given rapid input, HDR, reconnect, sleep, and quit, When state changes, Then latest intent applies safely and software state restores. | `TEST-05-03`, `MANUAL-05-03` |
 | `AC-05-04` | `DORA-05-009` | Given keyboard and VoiceOver, When every state is visited, Then the control is operable and semantically announced without permission. | `TEST-05-04`, `MANUAL-05-04` |

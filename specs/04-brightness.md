@@ -43,12 +43,14 @@ stateDiagram-v2
 
 ## Requirements
 
-- **DORA-04-001:** `BrightnessFeature` is its own SwiftPM module, conforms to
-  `DisplayoraFeature`, and registers only brightness controls, settings,
-  capability probes, and commands.
+- **DORA-04-001:** `BrightnessFeature` is its own SwiftPM module, has the exact
+  static `FeatureID` `brightness`, conforms to `DisplayoraFeature`, and
+  registers only brightness controls, settings, capability probes, and
+  commands.
 - **DORA-04-002:** Hardware brightness uses DDC/CI VCP code `0x10`; support is
-  accepted only after a valid capabilities/read probe and a bounded write/read
-  verification.
+  accepted only after a valid capabilities/read probe whose reported maximum
+  is greater than zero and a bounded no-op write/read verification of the
+  current raw value. A failed, malformed, or inconsistent read is not support.
 - **DORA-04-003:** Mechanism selection follows Specification 03: reliable
   hardware first, then safe software fallback, then temporary failure or
   unsupported.
@@ -57,7 +59,11 @@ stateDiagram-v2
   APIs directly.
 - **DORA-04-005:** Slider input is clamped to `0...100`, updates UI
   immediately, debounces for 75 ms, permits at most ten writes per second, and
-  always applies the latest value.
+  always applies the latest value. Hardware values normalize as
+  `round(rawCurrent / rawMaximum * 100)` for display and
+  `round(percent / 100 * rawMaximum)` for writes. Read-back must normalize to
+  within one percentage point of the requested value; otherwise the request
+  is unapplied and enters temporary failure.
 - **DORA-04-006:** HDR or unknown transform safety disables software fallback
   and restores its baseline; DDC hardware remains eligible.
 - **DORA-04-007:** Persistent display IDs may store the last user value.

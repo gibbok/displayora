@@ -37,9 +37,11 @@ predecessor branch/PR and state that this PR will be retargeted or rebased onto
 ## Validation
 
 ```text
-make check-specs
 git diff --check
 ```
 
-Record the actual result of each command and confirm that the PR diff contains
-only the numbered specification and its tracker-row update.
+Before Specification 01 is implemented, record every specification-only
+check from `specs/README.md` and confirm that no validator or non-Markdown file
+was added. After Specification 01 creates repository tooling, also record the
+actual result of `make check-specs`. Confirm that the PR diff contains only the
+numbered specification and its tracker-row update.

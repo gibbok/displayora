@@ -33,13 +33,21 @@ display and Settings.
 
 ```mermaid
 stateDiagram-v2
+    [*] --> Enabled
     Enabled --> Confirming: disable requested
-    Confirming --> DisabledTimed: confirm
-    DisabledTimed --> Enabled: re-enable or 30 s recovery
+    Confirming --> Enabled: cancel
+    Confirming --> Disabling: confirm
+    Disabling --> DisabledTimed: private commit confirmed
+    Disabling --> FallbackApplying: private unavailable and topology unchanged
+    Disabling --> RecoveryFailed: state uncertain
+    FallbackApplying --> DisabledTimed: fallback commit confirmed
+    FallbackApplying --> RecoveryFailed: rollback fails
+    DisabledTimed --> Reenabling: re-enable or 30 s recovery
     DisabledTimed --> Disabled: keep disabled
-    Disabled --> Enabled: re-enable, quit, or shutdown
-    Enabled --> Fallback: private adapter unavailable
-    Fallback --> Enabled: restore
+    Disabled --> Reenabling: re-enable, quit, or shutdown
+    Reenabling --> Enabled: topology confirms enabled
+    Reenabling --> RecoveryFailed: restoration fails
+    RecoveryFailed --> Reenabling: Try Again
 ```
 
 ## Requirements
@@ -61,12 +69,18 @@ stateDiagram-v2
 - **DORA-09-007:** Sleep/wake, topology change, stale endpoint, or loss of the
   recovery display immediately attempts restoration and reconciles actual
   topology.
-- **DORA-09-008:** If the private adapter is unavailable or fails before
-  commit, an isolated fallback may mirror the target to a safe active display
-  and apply an owned zero-luminance gamma contribution. Both parts are
-  transactional and fully restored together.
+- **DORA-09-008:** If the private adapter is unavailable, an isolated fallback
+  may mirror the target to a safe active display and apply an owned
+  zero-luminance gamma contribution. After any private-adapter error, fallback
+  is permitted only when a fresh topology snapshot proves that the private
+  path made no change. Unknown or partial private state enters recovery instead
+  of attempting fallback. Both fallback parts commit transactionally and are
+  restored together in reverse order.
 - **DORA-09-009:** Failure never claims a display is disabled or restored until
-  topology confirms it. Persistent recovery guidance remains visible.
+  a fresh topology snapshot confirms it. An uncertain or failed recovery
+  disables further disable actions, retains an idempotent “Try Again” recovery
+  action, and keeps manual recovery guidance visible until every
+  feature-owned display is confirmed enabled.
 - **DORA-09-010:** Confirmation, countdown, recovery, and errors are keyboard
   and VoiceOver accessible and require no TCC permission.
 - **DORA-09-011:** Native Intel and Apple Silicon tests are mandatory because
@@ -91,11 +105,15 @@ System adapter boundary.
 
 ## Failure and Recovery
 
-Every step records whether it committed. Partial fallback rolls back in reverse
-order. Restoration retries once after a fresh topology snapshot; continued
-failure shows exact manual recovery guidance and logs privacy-safe evidence.
-Forced termination cannot guarantee recovery and is explicitly documented;
-the 30-second timer and normal-termination hook reduce that risk.
+Every step records whether it committed. A private-adapter error first
+reconciles topology: fallback starts only after the target is confirmed
+unchanged; otherwise the controller enters recovery. Partial fallback rolls
+back in reverse order. Restoration retries once after a fresh topology
+snapshot; continued failure blocks new disable requests, preserves the
+idempotent recovery action, shows manual recovery guidance, and logs
+privacy-safe evidence. Forced termination cannot guarantee recovery and is
+explicitly documented; the 30-second timer and normal-termination hook reduce
+that risk.
 
 ## Accessibility and Permissions
 
@@ -126,7 +144,7 @@ import. No sibling is required. Run `make check-architecture`.
 |---|---|---|---|
 | `AC-09-01` | `DORA-09-001`, `DORA-09-002`, `DORA-09-003` | Given available and missing symbols, When disable is requested, Then private use is isolated, runtime checked, and `.forAppOnly`. | `TEST-09-01` |
 | `AC-09-02` | `DORA-09-004`, `DORA-09-005`, `DORA-09-006` | Given one or multiple usable displays, When disable/keep/timer/quit occur, Then the final display is protected and owned state restores. | `TEST-09-02`, `MANUAL-09-02` |
-| `AC-09-03` | `DORA-09-007`, `DORA-09-008`, `DORA-09-009` | Given lifecycle changes and partial failures, When private or fallback transactions run, Then rollback and confirmed recovery remain honest. | `TEST-09-03`, `MANUAL-09-03` |
+| `AC-09-03` | `DORA-09-007`, `DORA-09-008`, `DORA-09-009` | Given lifecycle changes, private-path uncertainty, and partial fallback failures, When reconciliation and recovery run, Then fallback starts only from confirmed unchanged topology, rollback is ordered, and UI reports only confirmed state. | `TEST-09-03`, `MANUAL-09-03` |
 | `AC-09-04` | `DORA-09-010`, `DORA-09-011` | Given native Intel/Apple Silicon and assistive technology, When all states are exercised, Then behavior is recoverable and accessible without permission. | `MANUAL-09-04` |
 | `AC-09-05` | `DORA-09-012` | Given implementation evidence, When a different Codex reviewer runs automatic repair, Then zero Blocking findings and `Approved` precede `Verified`. | `TEST-09-05` |
 

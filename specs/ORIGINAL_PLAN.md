@@ -138,12 +138,11 @@ implementation choice.
 
 For each tracker row, a fresh Codex author works only on that specification
 and its tracker entry, performs two documented self-review passes, and returns
-it to the coordinator. The coordinator runs:
-
-```sh
-make check-specs
-git diff --check
-```
+it to the coordinator. Before Specification 01 creates repository tooling, the
+coordinator runs `git diff --check` and completes the specification-only
+Markdown checklist in `specs/README.md`; no temporary validator is committed.
+After Specification 01 is implemented, `make check-specs` is an additional
+mandatory check.
 
 The coordinator commits and opens a draft pull request before another
 specification starts. Documentation commits use

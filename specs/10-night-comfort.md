@@ -120,7 +120,7 @@ import. `make check-architecture` rejects sibling coupling.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-10-01` | `DORA-10-001`, `DORA-10-002`, `DORA-10-006` | Given Night Comfort alone, When manual warmth changes, Then only its valid owned curve changes and no sibling is required. | `TEST-10-01` |
+| `AC-10-01` | `DORA-10-001`, `DORA-10-002`, `DORA-10-006` | Given Night Comfort alone, When manual warmth changes, Then only its valid owned curve changes, no sibling is required, and no ambiguous global toggle command is registered. | `TEST-10-01` |
 | `AC-10-02` | `DORA-10-003`, `DORA-10-004`, `DORA-10-005` | Given daytime, overnight, equal, DST, timezone, and clock cases, When boundaries pass, Then active state and next timer are correct. | `TEST-10-02` |
 | `AC-10-03` | `DORA-10-007`, `DORA-10-008` | Given HDR, sleep, disconnect, wake, Off, and quit, When safety changes, Then the owned transform restores and current intent reevaluates. | `TEST-10-03`, `MANUAL-10-03` |
 | `AC-10-04` | `DORA-10-009` | Given keyboard and VoiceOver, When settings and paused states are used, Then all meaning is operable and announced without permission. | `TEST-10-04`, `MANUAL-10-04` |

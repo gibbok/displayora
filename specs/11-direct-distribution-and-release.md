@@ -46,9 +46,14 @@ stateDiagram-v2
 
 ## Requirements
 
-- **DORA-11-001:** Release input is an explicit validated canonical feature
-  list. Empty and any implemented subset are valid; unknown or unavailable
-  features fail before building.
+- **DORA-11-001:** Specification 11 adds the non-interactive entry point
+  `make release VERSION=<major.minor.patch> BUILD=<positive-integer>
+  FEATURES='<canonical-comma-list>' SIGNING_IDENTITY='<Developer ID name>'
+  NOTARY_PROFILE=<keychain-profile>`. The release script validates every value
+  before building. `FEATURES=''` and any implemented subset are valid; empty
+  elements, whitespace, duplicates, unknown slugs, and unavailable features
+  fail with no signing or notary operation. The identity and profile name are
+  configuration, not secrets; credentials remain in Keychain.
 - **DORA-11-002:** Build separate Swift 6 release slices for `arm64` and
   `x86_64`, combine with `lipo`, and verify exactly those architectures.
 - **DORA-11-003:** Assemble `Displayora.app` with bundle identifier
@@ -63,10 +68,12 @@ stateDiagram-v2
 - **DORA-11-006:** Submit the DMG for notarization, require Accepted status,
   staple the ticket to both app and DMG where supported, and validate
   Gatekeeper offline.
-- **DORA-11-007:** Generate a machine-readable and human-readable release
-  manifest with version, build, commit, SHA-256, architectures, minimum macOS,
-  included features, omitted features, signing identity fingerprint, and
-  notarization request ID.
+- **DORA-11-007:** Atomically publish
+  `dist/releases/<version>/Displayora-<version>-universal.dmg`, `release.json`,
+  and `RELEASE.md`. Both manifests record version, build, commit, DMG SHA-256,
+  architectures, minimum macOS, included features, omitted features, signing
+  identity fingerprint, and notarization request ID; keys and feature arrays
+  use deterministic order.
 - **DORA-11-008:** Run empty-subset and selected-subset automated checks plus
   native Intel and Apple Silicon launch smoke tests. Rosetta-only evidence is
   insufficient.

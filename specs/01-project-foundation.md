@@ -350,9 +350,12 @@ feature module. It exposes:
 public func makeInstalledFeatures() -> [any DisplayoraFeature]
 ```
 
-`Package.swift` owns one canonical mapping per implemented optional feature:
+`Package.swift` owns one canonical mapping per implemented optional feature.
+The selection slug is also the feature's exact static `FeatureID`; this keeps
+composition, persisted command IDs, omission checks, and test-host snapshots
+on one canonical identity.
 
-| Selection slug | SwiftPM target | Compilation condition |
+| Selection slug and `FeatureID` | SwiftPM target | Compilation condition |
 |---|---|---|
 | `brightness` | `BrightnessFeature` | `DISPLAYORA_FEATURE_BRIGHTNESS` |
 | `contrast` | `ContrastFeature` | `DISPLAYORA_FEATURE_CONTRAST` |

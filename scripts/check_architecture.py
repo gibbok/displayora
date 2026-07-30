@@ -24,11 +24,13 @@ def main() -> int:
         "DisplayoraCore",
         "DisplayoraUI",
         "DisplayoraComposition",
+        "DisplayoraSystem",
         "Displayora",
         "DisplayoraFeatureTestHost",
         "DisplayoraTestSupport",
         "DisplayoraCoreTests",
         "DisplayoraUITests",
+        "DisplayoraSystemTests",
         "DisplayoraCompositionTests",
         "DisplayoraTests",
         "DisplayoraFeatureTestHostTests",
@@ -98,7 +100,8 @@ def main() -> int:
             "DisplayoraCore": set(),
             "DisplayoraUI": {"DisplayoraCore"},
             "DisplayoraComposition": {"DisplayoraUI"},
-            "Displayora": {"DisplayoraComposition", "DisplayoraUI"},
+            "DisplayoraSystem": {"DisplayoraCore"},
+            "Displayora": {"DisplayoraComposition", "DisplayoraSystem", "DisplayoraUI"},
             "DisplayoraFeatureTestHost": {"DisplayoraComposition", "DisplayoraUI"},
             "DisplayoraTestSupport": {"Testing"},
             "DisplayoraCoreTests": {"DisplayoraCore", "DisplayoraTestSupport"},
@@ -107,6 +110,7 @@ def main() -> int:
                 "DisplayoraTestSupport",
                 "DisplayoraUI",
             },
+            "DisplayoraSystemTests": {"DisplayoraSystem", "DisplayoraTestSupport"},
             "DisplayoraCompositionTests": {
                 "DisplayoraComposition",
                 "DisplayoraCore",
@@ -116,6 +120,7 @@ def main() -> int:
             "DisplayoraTests": {
                 "Displayora",
                 "DisplayoraCore",
+                "DisplayoraSystem",
                 "DisplayoraTestSupport",
                 "DisplayoraUI",
             },
@@ -146,6 +151,7 @@ def main() -> int:
     forbidden_imports = {
         "DisplayoraCore": {"DisplayoraUI", "DisplayoraComposition"},
         "DisplayoraUI": {"DisplayoraComposition"},
+        "DisplayoraSystem": {"DisplayoraUI", "DisplayoraComposition"},
     }
     for module, forbidden in forbidden_imports.items():
         found = imports.get(module, set()) & forbidden
@@ -178,6 +184,19 @@ def main() -> int:
             continue
         if path.is_file() and "xcodebuild" in path.read_text(errors="ignore"):
             errors.append(f"{path.relative_to(ROOT)} invokes forbidden xcodebuild")
+    forbidden_shell_apis = [
+        "LSSharedFileList",
+        "LSSharedFileListItem",
+        "SMLoginItemSetEnabled",
+        "setActivationPolicy",
+    ]
+    for path in source_files:
+        if path.suffix != ".swift":
+            continue
+        source = path.read_text(errors="ignore")
+        for api in forbidden_shell_apis:
+            if api in source:
+                errors.append(f"{path.relative_to(ROOT)} references forbidden {api}")
 
     with (APP / "Support" / "Info.plist").open("rb") as handle:
         plist = plistlib.load(handle)

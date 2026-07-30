@@ -352,7 +352,7 @@ Items button appears only for `requiresApproval`.
   Later APIs require an explicit availability check and a macOS 13 path.
 - UI, persistence, and ServiceManagement use the Intel macOS implementation
   code; architecture conditional compilation is prohibited.
-- Native checks verify Settings/login operations create no Dock icon. Rosetta
+- Native checks verify Settings/login operations create no Dock icon.
 - Display status is presentation-only; HDR, identity, lifecycle, probing, and
   recovery remain Specification 03 work.
 - This specification uses no private API. Its AppKit Settings-opening fallback

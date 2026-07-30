@@ -66,12 +66,19 @@ public protocol DisplayLifecycleObserving: Sendable {
 public enum DisplayLifecycleEvent: Sendable { case changed, willSleep, didWake }
 
 public actor DisplayPlatform: DisplayPlatformReading {
+  private struct DisplayEndpoint: Sendable {
+    let id: DisplayID
+    let generation: UInt64
+  }
+
   private let inventory: any DisplayInventoryReading
   private var snapshot = DisplayPlatformSnapshot(revision: 0, phase: .starting, displays: [])
   private var continuations: [UUID: AsyncStream<DisplayPlatformSnapshot>.Continuation] = [:]
   private var reconciliationTask: Task<Void, Never>?
   private var lifecycleTask: Task<Void, Never>?
   private var wakeTask: Task<Void, Never>?
+  private var endpointGeneration: UInt64 = 0
+  private var endpoints: [DisplayID: DisplayEndpoint] = [:]
 
   public init(inventory: any DisplayInventoryReading) {
     self.inventory = inventory
@@ -125,12 +132,18 @@ public actor DisplayPlatform: DisplayPlatformReading {
           id: $0.id, identityStability: $0.stability, localizedName: $0.name,
           isBuiltIn: $0.isBuiltIn, isActive: $0.isActive, dynamicRange: $0.dynamicRange)
       }
+      endpointGeneration &+= 1
+      endpoints = Dictionary(
+        uniqueKeysWithValues: displays.map {
+          ($0.id, DisplayEndpoint(id: $0.id, generation: endpointGeneration))
+        })
       publish(phase: .ready, displays: displays)
     } catch { publish(phase: .failed(.enumerationFailed), displays: []) }
   }
   public func willSleep() {
     reconciliationTask?.cancel()
     wakeTask?.cancel()
+    endpoints = [:]
     publish(phase: .sleeping, displays: [])
   }
   public func didWake() {

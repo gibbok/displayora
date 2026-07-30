@@ -120,6 +120,31 @@ public enum CapabilityProbeResult: Sendable {
   case unsupported
   case temporarilyUnavailable(CapabilityFailure)
 }
+
+public enum CapabilitySelection {
+  public static func resolve(
+    hardware: CapabilityProbeResult?,
+    software: CapabilityProbeResult?
+  ) -> DisplayCapabilityAvailability {
+    if case .usable(let descriptor) = hardware { return .hardware(descriptor) }
+    if case .usable(let descriptor) = software {
+      return .softwareFallback(
+        descriptor,
+        isUnsupported(hardware) ? .hardwareUnsupported : .hardwareTemporarilyUnavailable)
+    }
+    let transient = [hardware, software].compactMap { result -> CapabilityFailure? in
+      guard case .temporarilyUnavailable(let failure) = result else { return nil }
+      return failure
+    }.first
+    if let transient { return .temporarilyUnavailable(transient) }
+    return .unsupported(.noMatchingMechanism)
+  }
+
+  private static func isUnsupported(_ result: CapabilityProbeResult?) -> Bool {
+    if case .unsupported = result { return true }
+    return false
+  }
+}
 public protocol DisplayCapabilityProbing: Sendable {
   var owner: FeatureID { get }
   var capabilityID: DisplayCapabilityID { get }

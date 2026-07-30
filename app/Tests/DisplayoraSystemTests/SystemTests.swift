@@ -32,6 +32,37 @@ struct DisplayPlatformTests {
   }
 }
 
+struct DisplayIdentityResolverTests {
+  @Test func testUsesSystemUUIDBeforeAnyOtherMaterial() {
+    let uuid = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    let resolved = DisplayIdentityResolver(epoch: UUID())
+      .resolve(DisplayIdentityMaterial(systemUUID: uuid, manufacturer: 1, product: 2, serial: 3, connectionToken: "a"))
+    XCTAssertEqual(resolved.0.rawValue, "display.uuid.00000000-0000-0000-0000-000000000001")
+    XCTAssertEqual(resolved.1, .persistent)
+  }
+
+  @Test func testFallsBackToConnectionScopedIdentityWithoutSafeMaterial() {
+    let epoch = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+    let resolved = DisplayIdentityResolver(epoch: epoch)
+      .resolve(DisplayIdentityMaterial(systemUUID: nil, manufacturer: 1, product: 2, serial: 0, connectionToken: "a"))
+    XCTAssertEqual(resolved.1, .connectionScoped)
+    XCTAssertTrue(resolved.0.rawValue.contains(".a"))
+  }
+}
+
+struct CapabilitySelectionTests {
+  @Test func testHardwareWinsOverSoftware() {
+    let hardware = CapabilityProbeResult.usable(AdapterDescriptor(id: "hardware"))
+    let software = CapabilityProbeResult.usable(AdapterDescriptor(id: "software"))
+    XCTAssertEqual(CapabilitySelection.resolve(hardware: hardware, software: software), .hardware(AdapterDescriptor(id: "hardware")))
+  }
+
+  @Test func testSoftwareRecordsUnsupportedHardware() {
+    let result = CapabilitySelection.resolve(hardware: .unsupported, software: .usable(AdapterDescriptor(id: "software")))
+    XCTAssertEqual(result, .softwareFallback(AdapterDescriptor(id: "software"), .hardwareUnsupported))
+  }
+}
+
 struct ColorTransformCoordinatorTests {
   @Test func testContributionsComposeFromTheBaselineAndRestoreAfterLastRemoval() async throws {
     let display = DisplayID(rawValue: "display.fixture")

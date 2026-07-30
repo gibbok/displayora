@@ -1,3 +1,4 @@
+import DisplayoraCore
 import DisplayoraDisplay
 import DisplayoraSystem
 import DisplayoraTestSupport
@@ -71,6 +72,22 @@ struct CapabilitySelectionTests {
   @Test func testSoftwareRecordsUnsupportedHardware() {
     let result = CapabilitySelection.resolve(hardware: .unsupported, software: .usable(AdapterDescriptor(id: "software")))
     XCTAssertEqual(result, .softwareFallback(AdapterDescriptor(id: "software"), .hardwareUnsupported))
+  }
+}
+
+struct CapabilityProbeSchedulerTests {
+  @Test func testRejectsDuplicateRegistrationsBeforeProbing() throws {
+    XCTAssertThrowsError(try CapabilityProbeScheduler(probes: [FixtureProbe(.hardware), FixtureProbe(.hardware)]))
+  }
+}
+
+private struct FixtureProbe: DisplayCapabilityProbing {
+  let mechanism: CapabilityMechanism
+  init(_ mechanism: CapabilityMechanism) { self.mechanism = mechanism }
+  let owner = FeatureID(rawValue: "fixture")!
+  let capabilityID = DisplayCapabilityID(rawValue: "fixture.capability")!
+  func probe(_ endpoint: DisplayProbeEndpoint) async -> CapabilityProbeResult {
+    .usable(AdapterDescriptor(id: mechanism.rawValue))
   }
 }
 

@@ -141,7 +141,7 @@ let package = Package(
     ),
     .testTarget(
       name: "DisplayoraSystemTests",
-      dependencies: ["DisplayoraDisplay", "DisplayoraSystem", "DisplayoraTestSupport"],
+      dependencies: ["DisplayoraCore", "DisplayoraDisplay", "DisplayoraSystem", "DisplayoraTestSupport"],
       swiftSettings: strictSwiftSettings
     ),
     .testTarget(

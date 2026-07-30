@@ -113,7 +113,7 @@ def main() -> int:
                 "DisplayoraTestSupport",
                 "DisplayoraUI",
             },
-            "DisplayoraSystemTests": {"DisplayoraDisplay", "DisplayoraSystem", "DisplayoraTestSupport"},
+            "DisplayoraSystemTests": {"DisplayoraCore", "DisplayoraDisplay", "DisplayoraSystem", "DisplayoraTestSupport"},
             "DisplayoraCompositionTests": {
                 "DisplayoraComposition",
                 "DisplayoraCore",

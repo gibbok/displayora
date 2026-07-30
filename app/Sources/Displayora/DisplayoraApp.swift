@@ -38,7 +38,7 @@ struct DisplayoraApp: App {
   private func perform(_ action: ShellAction) {
     switch action {
     case .openSettings:
-      SettingsWindowOpener.open()
+      SettingsWindowOpener.open(model: model)
     case .quit:
       NSApplication.shared.terminate(nil)
     default:
@@ -54,10 +54,32 @@ private enum SettingsWindowOpener {
     category: "Settings"
   )
 
-  static func open() {
+  private static var window: NSWindow?
+
+  static func open(model: ApplicationModel) {
     NSApp.activate(ignoringOtherApps: true)
-    if !AppKitSettingsOpener().openSettings() {
-      logger.error("AppKit did not accept the Settings window action.")
+    if let window {
+      window.makeKeyAndOrderFront(nil)
+      return
     }
+    let controller = NSHostingController(rootView: ApplicationSettingsContainer(model: model))
+    let window = NSWindow(contentViewController: controller)
+    window.title = "Displayora Settings"
+    window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+    window.setContentSize(NSSize(width: 468, height: 360))
+    window.isReleasedWhenClosed = false
+    window.makeKeyAndOrderFront(nil)
+    Self.window = window
+    logger.info("Opened the Displayora Settings window.")
+  }
+}
+
+@MainActor
+private struct ApplicationSettingsContainer: View {
+  @ObservedObject var model: ApplicationModel
+
+  var body: some View {
+    SettingsRoot(presentation: model.settingsPresentation, perform: model.perform)
+      .onAppear { model.openedSettings() }
   }
 }

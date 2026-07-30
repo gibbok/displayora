@@ -100,7 +100,8 @@ public struct MenuBarRoot: View {
       }
       .padding()
     }
-    .frame(width: 320, maxHeight: 480)
+    .frame(width: 320)
+    .frame(maxHeight: 480)
   }
 
   @ViewBuilder

@@ -1,4 +1,5 @@
 import Combine
+import DisplayoraCore
 import DisplayoraSystem
 import DisplayoraUI
 
@@ -72,9 +73,9 @@ public final class ApplicationModel: ObservableObject {
       registry = replacement
       state = .ready(replacement.snapshot)
       readWelcomeCompletion()
-    } catch {
+    } catch let error {
       registry = FeatureRegistry()
-      state = .failed(error as? FeatureRegistrationError ?? .featureConstruction(unknownFeatureID))
+      state = .failed(error)
     }
     refreshPresentations()
     observeDisplayStatusIfNeeded()
@@ -149,10 +150,10 @@ public final class ApplicationModel: ObservableObject {
       for await status in stream {
         guard !Task.isCancelled else { return }
         receivedValue = true
-        await self?.receiveDisplayStatus(status)
+        self?.receiveDisplayStatus(status)
       }
       if !receivedValue, !Task.isCancelled {
-        await self?.receiveDisplayStatus(
+        self?.receiveDisplayStatus(
           .failed(
             ShellDisplayStatusFailure(
               code: "status-stream-ended",
@@ -248,10 +249,3 @@ public final class ApplicationModel: ObservableObject {
     )
   }
 }
-
-private let unknownFeatureID: FeatureID = {
-  guard let identifier = FeatureID(rawValue: "unknown") else {
-    preconditionFailure("The fallback feature identifier must remain valid.")
-  }
-  return identifier
-}()

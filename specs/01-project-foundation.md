@@ -7,22 +7,22 @@
 | ID | `01` |
 | Classification | Required platform |
 | Specification status | Ready |
-| Implementation status | In progress — Apple Silicon validation pending |
+| Implementation status | In progress — Intel macOS only |
 | Dependencies | None |
 
 ## Goal
 
 Establish a warning-free Swift 6 SwiftPM application under `app/` that runs on
-macOS 13 or later on Intel and Apple Silicon. The result is a terminal-built
+macOS 13 or later on Intel Macs only. The result is a terminal-built
 menu-bar application named Displayora, with a popover-style `MenuBarExtra`, a
 separate Settings scene, no permanent Dock icon, a transactional
 `FeatureRegistry`, compile-time selection of independently buildable features,
 and a runnable isolated feature test host.
 
 The foundation also supplies one-command development validation and a real,
-universal `Displayora.app`. The bundle is assembled from separate `arm64` and
-`x86_64` release builds, combined with `lipo`, checked, and ad-hoc signed. No
-`.xcodeproj`, Xcode GUI workflow, or `xcodebuild` invocation is part of the
+Intel-only `Displayora.app`. The bundle is assembled from one `x86_64` release
+build, checked, and ad-hoc signed. No `.xcodeproj`, Xcode GUI workflow, or
+`xcodebuild` invocation is part of the
 project.
 
 ## Non-Goals
@@ -110,7 +110,7 @@ stateDiagram-v2
   `Core <- UI <- Composition <- executables`. A later system target may depend
   on Core, but Core never imports UI, system adapters, or a feature module.
 - **DORA-01-003 — Terminal-only repository.** The supported workflow uses
-  `swift`, `swift format`, Python 3 validation scripts, `make`, `lipo`,
+  `swift`, `swift format`, Python 3 validation scripts, `make`,
   `plutil`, and `codesign` from the terminal. The repository contains no
   `.xcodeproj` or `project.pbxproj`, and scripts must not call `xcodebuild` or
   require Xcode GUI state.
@@ -190,7 +190,7 @@ stateDiagram-v2
   `check-review SPEC=NN` validates durable review evidence; `build` builds the
   selected debug app; `test` runs selected focused and regression tests;
   `format` performs strict lint without modifying files; `run` runs the
-  selected app; `bundle` produces and validates the universal app; `verify`
+  selected app; `bundle` produces and validates the Intel-only app; `verify`
   runs doctor, specification, formatting, build, test, architecture, and
   bundle checks; `verify-feature FEATURE=<name>` performs the isolated verification scope
   defined by DORA-01-010; and `clean` removes only known SwiftPM and bundle outputs
@@ -211,32 +211,27 @@ stateDiagram-v2
   composition, JSON host snapshots, and shell state transitions.
   Python checks cover target direction, selected-feature
   isolation, absent sibling imports, forbidden Xcode artifacts, Info.plist
-  values, universal architectures, signing, and the absence of unresolved
+  values, Intel architecture, signing, and the absence of unresolved
   build-path dependencies.
 
-### Universal application bundle
+### Intel application bundle
 
-- **DORA-01-014 — Separate architecture builds.** `scripts/build-app.sh`
-  invokes two independent release builds, one with `--arch arm64` and one with
-  `--arch x86_64`, using distinct scratch paths. It passes the same selected
-  feature set and strict compiler flags to both. It must never derive one
-  architecture by copying or translating the other.
+- **DORA-01-014 — Intel release build.** `scripts/build-app.sh` invokes one
+  release build with `--arch x86_64`, using a dedicated scratch path. It passes
+  the selected feature set and strict compiler flags to that build and rejects
+  any resulting architecture other than `x86_64`.
 - **DORA-01-015 — Real and rollback-safe app assembly.** The bundle script assembles
   a temporary `Displayora.app/Contents/{MacOS,Resources}`, copies the locked
-  Info.plist to `Contents/Info.plist`, combines the two `Displayora`
-  executables with `lipo -create`, and verifies that the result contains
-  exactly `arm64` and `x86_64`. It rejects non-system load paths into
+  Info.plist to `Contents/Info.plist`, copies the Intel `Displayora` executable,
+  and verifies that the result contains exactly `x86_64`. It rejects non-system load paths into
   `.build`, checks the plist with `plutil`, ad-hoc signs with
   `codesign --force --sign - --timestamp=none`, and verifies with
   `codesign --verify --deep --strict`. Only after all checks pass does it
   perform a rollback-safe replacement of `dist/Displayora.app`; a failure
   restores and preserves the last valid bundle.
-- **DORA-01-016 — Native architecture behavior.** The universal app must
-  launch natively on both an Intel Mac and an Apple Silicon Mac running macOS
-  13 or later, show the same empty or selected composition, open Settings, and
-  remain absent from the Dock. Rosetta-only evidence is insufficient for the
-  Apple Silicon check, and a translated Intel process is insufficient for the
-  Intel check.
+- **DORA-01-016 — Native Intel behavior.** The Intel-only app must launch
+  natively on an Intel Mac running macOS 13 or later, show the empty or
+  selected composition, open Settings, and remain absent from the Dock.
 
 ### User safety and implementation approval
 
@@ -455,17 +450,11 @@ only when selected.
 - `MenuBarExtra` is available at the minimum deployment target. AppKit may be
   used only for small, isolated macOS integration adapters; application and
   settings content remains SwiftUI.
-- Intel and Apple Silicon use the same source, package graph, Info.plist,
-  feature set, and resources. Architecture-specific `#if arch(...)` behavior
-  is prohibited in the foundation unless it exists solely to report test
-  evidence.
-- Each release slice is compiled natively for its target architecture before
-  `lipo`; an Apple Silicon development machine may cross-compile the Intel
-  slice and an Intel development machine may cross-compile the Apple Silicon
-  slice. Final native launch evidence still comes from one machine of each
-  architecture.
-- The bundle script fails if the selected toolchain or installed macOS SDK
-  cannot produce either slice. It does not fall back to a thin application.
+- The supported architecture is Intel `x86_64`. Architecture-specific
+  conditional behavior is unnecessary and prohibited in the foundation.
+- The bundle script fails unless the selected toolchain and installed macOS SDK
+  produce an `x86_64` binary. Apple Silicon development and runtime validation
+  are outside the product scope.
 - HDR, display sleep/wake, hot-plug, and control restoration are inert at this
   layer because no display is opened or modified.
 - The foundation uses no private API. Later private APIs remain isolated and
@@ -530,9 +519,9 @@ the empty application product.
 | `AC-01-08` | `DORA-01-011` | Given the root Makefile, When each documented target is invoked with valid input and invalid required arguments are sampled, Then every target has the fixed behavior and failures are non-interactive and actionable. | `TEST-01-08` |
 | `AC-01-09` | `DORA-01-012` | Given all source and test targets, When formatting, debug build, test, release-slice, and host builds run, Then strict Swift 6 concurrency passes and every compiler warning is treated as an error. | `TEST-01-09` |
 | `AC-01-10` | `DORA-01-013` | Given the required Swift Testing and Python suites, When `make test` and `make check-architecture` run, Then every listed registry, state, composition, dependency, plist, bundle, and path invariant has an executable assertion. | `TEST-01-10` |
-| `AC-01-11` | `DORA-01-014` | Given a toolchain able to target both architectures, When `make bundle` runs, Then separate arm64 and x86_64 release invocations produce two distinct input binaries for `lipo`. | `TEST-01-11` |
-| `AC-01-12` | `DORA-01-015` | Given no prior bundle and then a known-good prior bundle, When bundling succeeds and a forced validation failure is tested, Then the successful output is a valid universal ad-hoc-signed app and the failure preserves the known-good output. | `TEST-01-12` |
-| `AC-01-13` | `DORA-01-016` | Given the same universal bundle on native Intel and Apple Silicon hosts, When it is launched and inspected, Then each host runs its native slice, shows equivalent menu and Settings behavior, and has no Dock icon. | `MANUAL-01-13` |
+| `AC-01-11` | `DORA-01-014` | Given an Intel-capable toolchain, When `make bundle` runs, Then one strict x86_64 release build produces an Intel executable. | `TEST-01-11` |
+| `AC-01-12` | `DORA-01-015` | Given no prior bundle and then a known-good prior bundle, When bundling succeeds and a forced validation failure is tested, Then the successful output is a valid Intel-only ad-hoc-signed app and the failure preserves the known-good output. | `TEST-01-12` |
+| `AC-01-13` | `DORA-01-016` | Given the Intel-only bundle on a native Intel host, When it is launched and inspected, Then it runs as x86_64, shows the expected menu and Settings behavior, and has no Dock icon. | `MANUAL-01-13` |
 | `AC-01-14` | `DORA-01-017` | Given VoiceOver, keyboard navigation, Increase Contrast, Reduce Transparency, and Reduce Motion, When loading, empty, populated-fixture, and failure states are exercised, Then all state and actions remain named, ordered, legible, and operable without any permission prompt. | `MANUAL-01-14` |
 | `AC-01-15` | `DORA-01-018` | Given completed implementation and validation, When a different Codex agent reviews and any findings are automatically repaired, Then repeated review records zero Blocking findings, all checks, and `Approved` before the tracker becomes `Verified`. | `TEST-01-15` |
 
@@ -556,35 +545,29 @@ DISPLAYORA_FEATURES='' make verify-feature FEATURE=foundation
 DISPLAYORA_FEATURES='' make bundle
 DISPLAYORA_FEATURES='' make verify
 python3 scripts/check_bundle.py dist/Displayora.app
-lipo -archs dist/Displayora.app/Contents/MacOS/Displayora
+file dist/Displayora.app/Contents/MacOS/Displayora
 codesign --verify --deep --strict --verbose=2 dist/Displayora.app
 plutil -lint dist/Displayora.app/Contents/Info.plist
 git diff --check
 ```
 
-Expected `lipo -archs` output contains `x86_64 arm64` in either order and no
-other token. `check_bundle.py` is the authoritative order-independent
-assertion. `make verify` must rebuild the bundle; it is not allowed to accept a
+Expected `file` output identifies the executable as `x86_64` and no other
+architecture. `check_bundle.py` is the authoritative assertion. `make verify` must rebuild the bundle; it is not allowed to accept a
 stale artifact.
 
-`scripts/build-app.sh` must execute the equivalent of these exact slice
-commands, preserving the caller's validated `DISPLAYORA_FEATURES` value:
+`scripts/build-app.sh` must execute the equivalent of this exact Intel build
+command, preserving the caller's validated `DISPLAYORA_FEATURES` value:
 
 ```sh
-swift build --package-path app --configuration release --arch arm64 \
-  --scratch-path app/.build/bundle-arm64 \
-  -Xswiftc -warnings-as-errors -Xswiftc -strict-concurrency=complete
 swift build --package-path app --configuration release --arch x86_64 \
   --scratch-path app/.build/bundle-x86_64 \
   -Xswiftc -warnings-as-errors -Xswiftc -strict-concurrency=complete
-lipo -create <arm64-bin-path>/Displayora <x86_64-bin-path>/Displayora \
-  -output <staging-app>/Contents/MacOS/Displayora
 ```
 
-The script obtains each `<architecture-bin-path>` by rerunning `swift build
+The script obtains the Intel binary path by rerunning `swift build
 --show-bin-path` with the identical package, configuration, architecture,
-scratch-path, and compiler arguments. Angle-bracket values above are resolved
-absolute paths printed to the build log, not shell input accepted from a user.
+scratch-path, and compiler arguments. The path is resolved by the script and
+is not shell input accepted from a user.
 
 Run the negative selection cases; every command must exit nonzero and print
 the invalid input:
@@ -618,9 +601,9 @@ The test identifiers map to executable evidence as follows:
 | `TEST-01-06` | `DisplayoraCompositionTests` plus manifest subprocess cases |
 | `TEST-01-07` | all four platform/release scope invocations plus each implemented optional-feature invocation |
 | `TEST-01-08` | `MakeContractTests`, which invokes safe targets in a temporary fixture repository |
-| `TEST-01-09` | `make format`, `make build`, `make test`, and both strict release slice builds inside `make bundle` |
+| `TEST-01-09` | `make format`, `make build`, `make test`, and the strict Intel release build inside `make bundle` |
 | `TEST-01-10` | `make test` and `make check-architecture`, including coverage-manifest assertions for required cases |
-| `TEST-01-11` | bundle log assertions and distinct-slice checks in `scripts/check_bundle.py` |
+| `TEST-01-11` | Intel architecture and bundle checks in `scripts/check_bundle.py` |
 | `TEST-01-12` | temporary-output success and injected pre-install validation-failure integration tests for `build-app.sh` |
 | `TEST-01-15` | `make check-review SPEC=01` after tracker approval |
 
@@ -629,13 +612,13 @@ The test identifiers map to executable evidence as follows:
 | ID | Required evidence |
 |---|---|
 | `MANUAL-01-03` | Steps 1–5 below on the empty selected build, recording the menu-bar item, popover, Settings window, Dock absence, and clean quit |
-| `MANUAL-01-13` | The architecture commands and Steps 1–5 below on both native Intel and native Apple Silicon using the identical bundle |
+| `MANUAL-01-13` | The architecture commands and Steps 1–5 below on a native Intel Mac |
 | `MANUAL-01-14` | The assistive-technology and display-option repetition described after Steps 1–5 |
 
 ### Manual native verification
 
-Perform the following once on a native Intel Mac and once on a native Apple
-Silicon Mac, both running macOS 13 or later, using the same produced app:
+Perform the following on a native Intel Mac running macOS 13 or later using the
+produced app:
 
 ```sh
 uname -m
@@ -644,8 +627,7 @@ open dist/Displayora.app
 ps -axo pid,arch,comm | grep '[D]isplayora.app/Contents/MacOS/Displayora'
 ```
 
-On Intel, `uname -m` and the running process report `x86_64`; on Apple Silicon,
-they report `arm64`. On each machine:
+`uname -m` and the running process must report `x86_64`:
 
 1. Confirm the menu-bar item is announced and displayed as “Displayora”.
 2. Open the popover and confirm the empty-build message, Settings, and Quit.
@@ -685,8 +667,8 @@ bundle validation must pass.
 Before commit, a different Codex reviewer examines this specification and its
 acceptance criteria, the complete working-tree diff, all new and changed
 tests, relevant shared interfaces, and captured build, test, formatting,
-architecture, bundle, strict-concurrency, standalone, omission, Intel, and
-Apple Silicon results. The reviewer writes
+architecture, bundle, strict-concurrency, standalone, omission, and Intel
+results. The reviewer writes
 `specs/reviews/01-project-foundation-review.md` from the review template. Every
 round records blocking and non-blocking findings, affected requirement IDs and
 files, required corrections, automatic fixes, and exact validation
@@ -720,7 +702,7 @@ revision made registry registration transactional with typed errors, defined
 the registering/empty/populated/failure states and a bounded user-triggered
 retry, and required temporary bundle assembly with validation before atomic
 replacement. It also added destructive-path guards to `clean` and explicit
-native launch evidence instead of treating a universal header as sufficient.
+native launch evidence instead of treating a binary header as sufficient.
 
 ### Pass 2 — Independence and Verifiability
 
@@ -731,7 +713,7 @@ manifest validation, conditional target dependencies and imports, an
 executable one-feature JSON host, isolated scratch paths, foundation fixture
 coverage, and explicit empty-selection checks. It then mapped every
 requirement to Given/When/Then criteria and named automated or manual evidence,
-added exact strict-concurrency and universal-bundle commands, and made
+added exact strict-concurrency and Intel-bundle commands, and made
 independent Codex review plus automatic repair a prerequisite for `Verified`.
 
 ## Pull Request Handoff

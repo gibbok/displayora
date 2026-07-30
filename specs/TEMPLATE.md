@@ -34,7 +34,7 @@ stateDiagram-v2
 ## Requirements
 
 Use stable IDs such as `DORA-NN-001`. Include accessibility, permissions,
-failure/recovery, Intel/Apple Silicon, standalone verification, and omission.
+failure/recovery, Intel, standalone verification, and omission.
 Resolve every implementation-relevant choice: bounds and units, timing and
 retry limits, precedence, persistence keys and invalid-value handling, user
 copy, concurrency ownership, adapter boundaries, and observable success or
@@ -58,7 +58,7 @@ permission timing, denial, and revocation.
 
 ## Platform Considerations
 
-Explain macOS 13+, Intel, Apple Silicon, HDR, sleep/wake, hot-plug, and private
+Explain macOS 13+, Intel, HDR, sleep/wake, hot-plug, and private
 API differences that apply.
 
 ## Standalone and Omission Behavior
@@ -81,7 +81,7 @@ List exact automated commands and exact manual procedures. Define the test
 target or fixture behind every `TEST-NN-XX` and the steps and recorded evidence
 behind every `MANUAL-NN-XX`. Include focused tests, full regression,
 formatting, architecture, strict concurrency, standalone composition, omission,
-and native Intel and Apple Silicon evidence where hardware behavior is
+and native Intel evidence where hardware behavior is
 involved. Automated tests must not claim to prove behavior that requires real
 hardware, permissions, signing identities, notarization credentials, or
 Gatekeeper.

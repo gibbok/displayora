@@ -12,9 +12,9 @@
 
 ## Goal
 
-Release any intentionally selected Displayora feature subset as a universal,
+Release any intentionally selected Displayora feature subset as an Intel-only,
 Developer ID signed, Hardened Runtime app inside a notarized and stapled
-downloadable DMG, with native Intel and Apple Silicon smoke evidence.
+downloadable DMG, with native Intel smoke evidence.
 
 ## Non-Goals
 
@@ -53,8 +53,8 @@ stateDiagram-v2
 - **DORA-11-001:** Release input is an explicit validated canonical feature
   list. Empty and any implemented subset are valid; unknown or unavailable
   features fail before building.
-- **DORA-11-002:** Build separate Swift 6 release slices for `arm64` and
-  `x86_64`, combine with `lipo`, and verify exactly those architectures.
+- **DORA-11-002:** Build one Swift 6 release binary for `x86_64` and verify the
+  Intel architecture.
 - **DORA-11-003:** Assemble `Displayora.app` with bundle identifier
   `com.displayora.Displayora`, a release-input version containing exactly three
   dot-separated non-negative integers, a positive decimal build number, and no
@@ -65,7 +65,7 @@ stateDiagram-v2
   Hardened Runtime, timestamping, and least-privilege entitlements. Ad-hoc
   signatures are rejected for distribution.
 - **DORA-11-005:** Create a read-only compressed DMG named
-  `Displayora-<version>-universal.dmg` containing only the app, Applications
+  `Displayora-<version>-intel.dmg` containing only the app, Applications
   link, and presentation metadata.
 - **DORA-11-006:** Treat the DMG as the outermost distribution container:
   submit that DMG with `notarytool`, require `Accepted`, staple and validate
@@ -80,7 +80,7 @@ stateDiagram-v2
   identity fingerprint, and notarization request ID. The DMG remains limited
   to the app, Applications link, and presentation metadata.
 - **DORA-11-008:** Run empty-subset and selected-subset automated checks plus
-  native Intel and Apple Silicon launch smoke tests. Rosetta-only evidence is
+  native Intel launch smoke tests. Translated or non-Intel evidence is
   insufficient.
 - **DORA-11-009:** Release failure preserves prior published artifacts, removes
   temporary credentials/files, and never uploads an unvalidated artifact.
@@ -109,7 +109,7 @@ values derived from credentials nor verbose command traces are logged. Final
 outputs are published atomically under `dist/releases/<version>/`.
 
 ```text
-validated input -> two release slices -> universal app -> sign/verify
+validated input -> Intel release build -> Intel-only app -> sign/verify
 -> DMG -> notarize/staple/assess outer DMG -> native smoke tests
 -> adjacent manifests -> atomic publish
 ```
@@ -132,8 +132,7 @@ by included specifications; distribution adds none.
 
 ## Platform Considerations
 
-Minimum macOS is 13. Native Intel reports `x86_64`; native Apple Silicon
-reports `arm64`. Both use the identical signed artifact and verify menu-bar
+Minimum macOS is 13. Native Intel reports `x86_64`. The signed artifact verifies menu-bar
 launch, Settings, no permanent Dock icon, included controls, and clean quit.
 
 ## Standalone and Omission Behavior
@@ -154,10 +153,10 @@ the omitted list. No sibling omission blocks a gate.
 
 | Criterion | Requirements | Given / When / Then | Verification |
 |---|---|---|---|
-| `AC-11-01` | `DORA-11-001`, `DORA-11-002`, `DORA-11-003` | Given empty and selected feature sets, When release builds, Then a correct universal app contains exactly the selected composition. | `TEST-11-01` |
+| `AC-11-01` | `DORA-11-001`, `DORA-11-002`, `DORA-11-003` | Given empty and selected feature sets, When release builds, Then a correct Intel-only app contains exactly the selected composition. | `TEST-11-01` |
 | `AC-11-02` | `DORA-11-004`, `DORA-11-005`, `DORA-11-006` | Given valid credentials, When packaging completes, Then the app is Developer ID signed with Hardened Runtime, the outer DMG is accepted and stapled, Gatekeeper assessment passes, and the contained app launches offline without an unsupported app-stapling claim. | `TEST-11-02`, `MANUAL-11-02` |
 | `AC-11-03` | `DORA-11-003`, `DORA-11-007`, `DORA-11-009` | Given valid input, a dirty checkout, success, and injected failures, When publication runs, Then only an exact clean commit publishes, adjacent manifests are complete, secrets are redacted, and prior artifacts remain safe. | `TEST-11-03` |
-| `AC-11-04` | `DORA-11-008`, `DORA-11-010`, `DORA-11-011` | Given native Intel and Apple Silicon, When the same DMG is installed, Then included behavior works accessibly and omitted features impose no gate. | `MANUAL-11-04` |
+| `AC-11-04` | `DORA-11-008`, `DORA-11-010`, `DORA-11-011` | Given native Intel, When the DMG is installed, Then included behavior works accessibly and omitted features impose no gate. | `MANUAL-11-04` |
 | `AC-11-05` | `DORA-11-012` | Given release implementation, When independent Codex review automatically repairs findings, Then zero Blocking findings and `Approved` precede `Verified`. | `TEST-11-05` |
 
 ## Verification
@@ -178,13 +177,13 @@ git diff --check
 | `TEST-11-02` | command-construction and failure fixtures for nested signing, Hardened Runtime, DMG contents, `notarytool`, `stapler`, and Gatekeeper; fixtures never claim real notarization |
 | `MANUAL-11-02` | Record signing verification, entitlements, Accepted request ID, outer-DMG staple validation, Gatekeeper assessment, clean-account offline launch, and artifact SHA-256. |
 | `TEST-11-03` | version/build validation, clean/exact-commit guard, deterministic adjacent manifests, secret-redaction, injected-stage failure, cleanup, and atomic-publication tests |
-| `MANUAL-11-04` | Install the identical final DMG on native Intel and Apple Silicon; record OS/hardware, process architecture, menu-bar/Settings/Dock behavior, included/omitted feature checks, accessibility pass/fail, and clean quit. |
+| `MANUAL-11-04` | Install the final DMG on native Intel; record OS/hardware, process architecture, menu-bar/Settings/Dock behavior, included/omitted feature checks, accessibility pass/fail, and clean quit. |
 | `TEST-11-05` | `make check-review SPEC=11` against the final approved review report |
 
 For a real candidate run the documented `make release` command, verify app
 signatures and Hardened Runtime, outer-DMG notarization and stapling,
 Gatekeeper assessment, adjacent checksums/manifests, and native Intel/Apple
-Silicon smoke tests. Repeat the first-launch check from the stapled DMG using a
+Intel smoke tests. Repeat the first-launch check from the stapled DMG using a
 clean test account while disconnected from the network. Apple's
 [custom notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)
 is the normative platform reference. Review report:

@@ -209,7 +209,7 @@ stateDiagram-v2
   reconnect or wake your display.” It removes duplicate statuses and forwards
   `retry()` to exactly one fresh reconciliation.
 - **DORA-03-018 — Platform parity, accessibility, and permission restraint.**
-  The same contracts and policies run on Intel and Apple Silicon macOS 13+.
+  The same contracts and policies run on Intel macOS 13+.
   No TCC permission, entitlement, private API, architecture branch, user
   prompt, or feature-specific UI is added. Names and capability state remain
   textual and VoiceOver-safe through Specification 02 wrappers.
@@ -439,7 +439,7 @@ request, system-settings deep link, or permission-shaped onboarding.
 
 - Every target deploys to macOS 13. Newer APIs have availability checks and a
   macOS 13 path. Inventory uses public Core Graphics and IOKit APIs only.
-- Intel and Apple Silicon use identical identity, probe precedence,
+- Intel uses identical identity, probe precedence,
   concurrency limits, HDR policy, curve math, and restoration behavior.
   Architecture conditional behavior is prohibited.
 - Built-in, external, mirrored, virtual, asleep, and HDR displays remain
@@ -499,7 +499,7 @@ Every optional feature may be built with Specifications 01–03 only.
 | `AC-03-11` | `DORA-03-016`, `DORA-03-017` | Given every platform phase, duplicate updates, stream cancellation, and retry, When the shell provider is observed, Then it emits the exact deduplicated Specification 02 mapping and retry starts one cycle. | `TEST-03-11` |
 | `AC-03-12` | `DORA-03-010`, `DORA-03-018` | Given VoiceOver and all fake states, When shell and fixture capability presentation are exercised, Then labels expose semantic state without adapter/identity data, focus churn, color-only meaning, or TCC prompts. | `TEST-03-12`, `MANUAL-03-12` |
 | `AC-03-13` | `DORA-03-001`, `DORA-03-007`, `DORA-03-019` | Given empty and fixture standalone builds, When focused, omission, architecture, and full regression checks run, Then no sibling is required and independent review reaches Approved only after automatic repairs. | `TEST-03-13` |
-| `AC-03-14` | `DORA-03-002`–`DORA-03-018` | Given the same universal app on native Intel and Apple Silicon Macs, When the manual matrix runs, Then discovery, reconnect, sleep/wake, HDR reporting, failure recovery, and restoration meet the same contracts. | `MANUAL-03-14` |
+| `AC-03-14` | `DORA-03-002`–`DORA-03-018` | Given the Intel-only app on a native Intel Mac, When the manual matrix runs, Then discovery, reconnect, sleep/wake, HDR reporting, failure recovery, and restoration meet the same contracts. | `MANUAL-03-14` |
 
 ## Verification
 
@@ -570,12 +570,12 @@ without its Approved report fails.
 | `MANUAL-03-09` | Matrix Step 7 for composition, last-owner removal, and normal-quit restoration |
 | `MANUAL-03-10` | Matrix Step 6 for SDR/HDR safety and restore-before-reprobe behavior |
 | `MANUAL-03-12` | Matrix Step 8 for semantic state, focus stability, privacy, accessibility, and no permission prompt |
-| `MANUAL-03-14` | The architecture commands and all matrix steps on both native Intel and native Apple Silicon using the identical bundle |
+| `MANUAL-03-14` | The architecture commands and all matrix steps on a native Intel Mac |
 
-### Manual Intel and Apple Silicon matrix
+### Manual Intel matrix
 
-Use the same universal app and a disposable user on one native Intel Mac and
-one native Apple Silicon Mac running macOS 13+. Each must have an external
+Use the Intel-only app and a disposable user on a native Intel Mac running
+macOS 13+. The Mac must have an external
 display; when available, include one HDR-capable display.
 
 ```sh
@@ -586,7 +586,7 @@ open dist/Displayora.app
 ps -axo pid,arch,comm | grep '[D]isplayora.app/Contents/MacOS/Displayora'
 ```
 
-On Intel require `x86_64`; on Apple Silicon require `arm64`, not Rosetta.
+Require `x86_64` and reject translated or unexpected processes.
 On each machine:
 
 1. Launch a diagnostic build with one fixture consumer. Record redacted
@@ -635,7 +635,7 @@ Before commit, a Codex reviewer different from the implementation author reads
 this specification and acceptance criteria, the complete working-tree diff,
 all tests and shared interfaces, and captured format, build, test, strict
 concurrency, architecture, standalone, omission, bundle, full-regression,
-Intel, Apple Silicon, HDR, and restoration evidence. The reviewer writes
+Intel, HDR, and restoration evidence. The reviewer writes
 `specs/reviews/03-display-platform-and-capabilities-review.md` from the review
 template, recording every round, finding, affected requirement and file,
 required correction, automatic fix, and exact command/result.
@@ -676,7 +676,7 @@ standalone checks. The revision locked opaque capability IDs, selected probe
 composition, hardware/software precedence, empty lazy startup, feature-neutral
 snapshots, and forbidden dependency/API scans. It added deterministic fakes,
 virtual-clock concurrency and hot-plug tests, exact Specification 02 mapping,
-Given/When/Then traceability, native Intel/Apple Silicon and HDR procedures,
+Given/When/Then traceability, native Intel and HDR procedures,
 and the independent Codex review plus automatic-repair gate.
 
 ## Pull Request Handoff

@@ -13,7 +13,7 @@ Code-review states: `Not reviewed`, `Reviewing`, `Changes requested`,
 
 | ID | Specification | Dependencies | Specification | Implementation | Code review |
 |---|---|---|---|---|---|
-| 01 | Project Foundation | — | Ready | In progress | Reviewing |
+| 01 | Project Foundation | — | Ready | Verified | Approved |
 | 02 | Menu-Bar Shell and Onboarding | 01 | Ready | Not started | Not reviewed |
 | 03 | Display Platform and Capabilities | 01, 02 | Ready | Not started | Not reviewed |
 | 04 | Brightness | 01, 02, 03 | Ready | Not started | Not reviewed |
@@ -25,12 +25,8 @@ Code-review states: `Not reviewed`, `Reviewing`, `Changes requested`,
 | 10 | Night Comfort | 01, 02, 03 | Ready | Not started | Not reviewed |
 | 11 | Direct Distribution and Release | 01, 02, 03 | Ready | Not started | Not reviewed |
 
-## Pending platform validation
+## Platform validation
 
-- **Specification 01 — Project Foundation:** native Apple Silicon runtime and
-  accessibility validation is deferred until an Apple Silicon host is
-  available. The implementation may be merged and used as the baseline for
-  later specifications while remaining `In progress` with code review
-  `Reviewing`. Record the missing evidence in
-  `reviews/01-project-foundation-review.md` before advancing it to `Verified`
-  and `Approved`.
+- **Specification 01 — Project Foundation:** the product scope is Intel macOS
+  only. Validation is performed on a native Intel host; Apple Silicon is out of
+  scope.

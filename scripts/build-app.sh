@@ -6,7 +6,6 @@ package="$root/app"
 dist="$root/dist"
 output_app="${DISPLAYORA_BUNDLE_OUTPUT:-$dist/Displayora.app}"
 features="${DISPLAYORA_FEATURES-}"
-arm_scratch="$package/.build/bundle-arm64"
 intel_scratch="$package/.build/bundle-x86_64"
 strict_flags=(-Xswiftc -warnings-as-errors -Xswiftc -strict-concurrency=complete)
 
@@ -24,16 +23,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "Building arm64 release slice"
-DISPLAYORA_FOUNDATION_UI_HARNESS=0 DISPLAYORA_FEATURES="$features" \
-    swift build --package-path "$package" \
-    --configuration release --arch arm64 --scratch-path "$arm_scratch" "${strict_flags[@]}"
-arm_bin=$(DISPLAYORA_FOUNDATION_UI_HARNESS=0 DISPLAYORA_FEATURES="$features" \
-    swift build --package-path "$package" \
-    --configuration release --arch arm64 --scratch-path "$arm_scratch" \
-    "${strict_flags[@]}" --show-bin-path)
-
-echo "Building x86_64 release slice"
+echo "Building Intel (x86_64) release binary"
 DISPLAYORA_FOUNDATION_UI_HARNESS=0 DISPLAYORA_FEATURES="$features" \
     swift build --package-path "$package" \
     --configuration release --arch x86_64 --scratch-path "$intel_scratch" "${strict_flags[@]}"
@@ -42,28 +32,18 @@ intel_bin=$(DISPLAYORA_FOUNDATION_UI_HARNESS=0 DISPLAYORA_FEATURES="$features" \
     --configuration release --arch x86_64 --scratch-path "$intel_scratch" \
     "${strict_flags[@]}" --show-bin-path)
 
-echo "arm64 binary: $arm_bin/Displayora"
 echo "x86_64 binary: $intel_bin/Displayora"
-if [[ "$arm_bin/Displayora" == "$intel_bin/Displayora" ]]; then
-    echo "Architecture builds resolved to the same input binary." >&2
-    exit 1
-fi
 
 staged_app="$work/Displayora.app"
 mkdir -p "$staged_app/Contents/MacOS" "$staged_app/Contents/Resources"
 cp "$package/Support/Info.plist" "$staged_app/Contents/Info.plist"
 plutil -lint "$staged_app/Contents/Info.plist"
-lipo -create "$arm_bin/Displayora" "$intel_bin/Displayora" \
-    -output "$staged_app/Contents/MacOS/Displayora"
+cp "$intel_bin/Displayora" "$staged_app/Contents/MacOS/Displayora"
 chmod 755 "$staged_app/Contents/MacOS/Displayora"
 
-architectures=$(lipo -archs "$staged_app/Contents/MacOS/Displayora")
-if [[ " $architectures " != *" arm64 "* || " $architectures " != *" x86_64 "* ]]; then
-    echo "Universal binary does not contain both required architectures: $architectures" >&2
-    exit 1
-fi
-if [[ $(wc -w <<<"$architectures") -ne 2 ]]; then
-    echo "Universal binary contains unexpected architectures: $architectures" >&2
+architecture=$(file -b "$staged_app/Contents/MacOS/Displayora")
+if [[ "$architecture" != *"x86_64"* ]]; then
+    echo "Intel-only bundle has unexpected architecture: $architecture" >&2
     exit 1
 fi
 if otool -L "$staged_app/Contents/MacOS/Displayora" | tail -n +2 | awk '{print $1}' | grep -F ".build"; then

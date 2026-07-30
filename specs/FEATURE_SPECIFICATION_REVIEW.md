@@ -29,7 +29,7 @@ The review checked:
    [SPEC_STATUS.md](SPEC_STATUS.md).
 2. Required sections, stable requirement IDs, acceptance criteria, test/manual
    identifiers, omission behavior, accessibility, permissions, failure and
-   recovery, and native Intel/Apple Silicon coverage.
+recovery, and native Intel coverage.
 3. Cross-specification interfaces, canonical feature slugs, verification
    commands, state transitions, lifecycle ownership, and restoration
    invariants.

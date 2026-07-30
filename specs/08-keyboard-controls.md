@@ -92,7 +92,7 @@ combination, conflicts, permission state, and test result.
 ## Platform Considerations
 
 Use macOS 13+ public shortcut APIs and an isolated, availability-checked event
-tap. Intel and Apple Silicon behavior is identical. Secure input or event-tap
+tap. Intel behavior is defined identically across supported systems. Secure input or event-tap
 disablement produces a recoverable unavailable state.
 
 ## Standalone and Omission Behavior
@@ -133,14 +133,14 @@ git diff --check
 | `TEST-08-01` | command-registry snapshot and persistence tests covering installation, disablement, omission, removal, and successful-save cleanup |
 | `TEST-08-02` | shortcut recording/registration tests for valid, reserved, duplicate, modifier-only, conflicting, and post-recording input |
 | `TEST-08-03` | permission-state adapter tests proving denial/revocation affects only media keys and always releases the event tap |
-| `MANUAL-08-03` | On native Intel and Apple Silicon, record configurable shortcuts without permission, explicit opt-in, denial, grant, revocation, secure-input/event-tap disablement, and process architecture. |
+| `MANUAL-08-03` | On native Intel, record configurable shortcuts without permission, explicit opt-in, denial, grant, revocation, secure-input/event-tap disablement, and process architecture. |
 | `TEST-08-04` | command-router non-reentrancy, typed failure, stale command, keyboard, and accessibility-semantic tests |
 | `MANUAL-08-04` | VoiceOver and Full Keyboard Access pass/fail for recording, conflicts, permission explanation, test command, and failure feedback |
 | `TEST-08-05` | `make check-review SPEC=08` against the final approved review report |
 
 Manual verification covers configurable shortcuts without permission,
 permission denial/grant/revocation, media keys, conflicts, omitted commands,
-VoiceOver, and native Intel/Apple Silicon. Review report:
+VoiceOver, and native Intel. Review report:
 `specs/reviews/08-keyboard-controls-review.md`.
 
 ## Code Quality and Automatic Review

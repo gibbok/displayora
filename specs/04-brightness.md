@@ -104,7 +104,7 @@ requests no Accessibility or other TCC permission.
 
 ## Platform Considerations
 
-The same source runs on Intel and Apple Silicon macOS 13+. Native tests cover
+The same source runs on Intel macOS 13+. Native tests cover
 at least one DDC-capable monitor on each architecture. Unsupported Apple
 internal displays are omitted unless the platform supplies an explicitly safe
 software mechanism. HDR behavior follows DORA-04-006.
@@ -149,13 +149,13 @@ git diff --check
 | `TEST-04-02` | `BrightnessControllerDebounceTests` using a virtual clock and scripted DDC read/write verification |
 | `TEST-04-03` | `BrightnessColorLifecycleTests` covering SDR/HDR, rollback, sleep, disconnect, feature removal, and termination |
 | `TEST-04-04` | persistence tests for persistent versus connection-scoped IDs plus accessibility semantics |
-| `MANUAL-04-04` | On native Intel and Apple Silicon, record monitor/connection, process architecture, DDC or fallback mechanism, rapid-drag result, HDR/reconnect/sleep/quit restoration, and VoiceOver pass/fail. |
+| `MANUAL-04-04` | On native Intel, record monitor/connection, process architecture, DDC or fallback mechanism, rapid-drag result, HDR/reconnect/sleep/quit restoration, and VoiceOver pass/fail. |
 | `TEST-04-05` | `make check-review SPEC=04` against the final approved review report |
 
 Before `Verified`, review validation reports that a report is not required.
 After approval it validates `specs/reviews/04-brightness-review.md`. Manually
 exercise DDC, fallback, rapid dragging, HDR, reconnect, sleep/wake, quit, and
-VoiceOver on native Intel and Apple Silicon hardware.
+VoiceOver on native Intel hardware.
 
 ## Code Quality and Automatic Review
 

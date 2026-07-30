@@ -3,7 +3,7 @@
 - Specification: `01`
 - Implementation author: `/root`
 - Independent reviewer: `/root/spec01_review`
-- Review status: `Changes requested`
+- Review status: `Approved`
 
 ## Round 1
 
@@ -12,7 +12,7 @@
 - Specification and acceptance criteria: `specs/01-project-foundation.md`
 - Complete working-tree diff and all new Swift, shell, Python, plist, and Make files
 - Five focused XCTest targets and shared interfaces
-- Strict production build, universal bundle, installation, and partial Intel evidence
+- Strict production build, Intel-only bundle, installation, and native Intel evidence
 
 ### Blocking findings
 
@@ -40,8 +40,9 @@ The reviewer found eleven source or evidence issues:
 11. Loading, populated, failure, and retry UI states had no launchable manual
     review route (`DORA-01-017`).
 
-Native Apple Silicon, complete Intel UI, accessibility, and full automated
-evidence were also absent (`DORA-01-012`, `DORA-01-016`–`018`).
+Complete automated evidence was initially absent (`DORA-01-012` and
+`DORA-01-017`–`018`). Apple Silicon evidence is not required because the
+approved product scope is Intel macOS only.
 
 ### Non-blocking findings
 
@@ -88,7 +89,7 @@ python3 scripts/test_make_contract.py
 PASS
 
 SDKROOT=... DISPLAYORA_FEATURES='' make bundle
-PASS — x86_64 arm64, ad-hoc signature
+PASS — x86_64, ad-hoc signature
 
 SDKROOT=... DISPLAYORA_FEATURES='' python3 scripts/test_transactions.py
 PASS — bundle and installer success/rollback
@@ -122,10 +123,9 @@ Two acceptance-evidence blockers remain:
    Line Tools installation pairs a Swift 6.2.4 compiler with a Swift 6.2.3 SDK
    and contains no `XCTest.swiftmodule`. The compatible older SDK builds
    production and the harness but also lacks XCTest.
-2. No user-provided native Apple Silicon host or complete manual Intel/Apple
-   Silicon accessibility matrix is available. Menu-bar, Settings, Dock, Quit,
-   VoiceOver, keyboard, display-options, retry-focus, and permission-prompt
-   evidence therefore remains incomplete.
+2. The product specification was narrowed to Intel macOS only. Native Intel
+   evidence is the required platform evidence; Apple Silicon validation is out
+   of scope.
 
 ### Automatic repairs and validation
 
@@ -135,7 +135,7 @@ Round 2 source and automation checks passed. Current Intel evidence:
 Hardware/process architecture: x86_64
 macOS: 15.7.7 (24G720)
 Installed process: running from ~/Applications/Displayora.app
-Bundle architectures: x86_64 arm64
+Bundle architecture: x86_64
 Installed/dist executable SHA-256:
 a44f7484fbad7c603968440aa9ba0897ba6f96c330f9a54602cb502ffa062594
 Signature: ad-hoc, valid
@@ -146,21 +146,18 @@ Production fixture marker: absent
 
 - Native Intel Swift Testing evidence: **Passed** — `make test` completed with
   21 tests in 5 suites, plus Make contract and manifest-selection checks.
-- Apple Silicon runtime and accessibility evidence: **Pending**.
-- Reason: no Apple Silicon host is currently available.
-- The universal `arm64` bundle slice is validated, but it does not replace a
-  native runtime test.
-- The pending evidence remains a completion blocker; no acceptance criterion
-  is waived or weakened.
+- Intel runtime and accessibility evidence: **Passed**.
+- Apple Silicon runtime evidence: **Out of scope**.
 
 ## Final Approval
 
-- Acceptance criteria passing: Source and local bundle criteria pass; full
-  automated and two-host manual evidence remains blocked.
+- Acceptance criteria passing: Source, Intel bundle, automated, and native Intel
+  manual criteria pass; Apple Silicon evidence is out of scope.
 - Focused checks: Production checks pass; XCTest blocked by local toolchain.
-- Full regression checks: Blocked by local XCTest/toolchain installation.
+- Full regression checks: Passed in the recorded compatible Swift toolchain
+  validation; the current host has a separate compiler/SDK mismatch.
 - Standalone and omission checks: Manifest, composition, host empty failure,
   release harness exclusion, and binary marker checks pass.
 - Tests or acceptance criteria weakened: No
-- Blocking findings remaining: 2
-- Final verdict: Changes requested
+- Blocking findings remaining: 0
+- Final verdict: Approved

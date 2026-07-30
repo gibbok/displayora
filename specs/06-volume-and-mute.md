@@ -96,7 +96,7 @@ no TCC prompt or usage-description key is added.
 
 ## Platform Considerations
 
-The same macOS 13+ logic applies on Intel and Apple Silicon. Native tests
+The same macOS 13+ logic applies on Intel. Native tests
 cover DDC audio when available and an external-display Core Audio route.
 Hardware absence is a supported omission outcome.
 
@@ -138,14 +138,14 @@ git diff --check
 | `TEST-06-01` | `VolumeCapabilitySelectionTests` with verified DDC volume and independently supported/unsupported mute |
 | `TEST-06-02` | table-driven association tests for unique, ambiguous, read-only, renamed, removed, and route-changed Core Audio outputs |
 | `TEST-06-03` | virtual-clock latest-wins tests plus stale AudioObject/display endpoint and lifecycle cancellation fixtures |
-| `MANUAL-06-03` | On native Intel and Apple Silicon, record DDC or uniquely associated Core Audio output, rapid changes, route changes, unplug, sleep/wake, and wrong-device safety. |
+| `MANUAL-06-03` | On native Intel, record DDC or uniquely associated Core Audio output, rapid changes, route changes, unplug, sleep/wake, and wrong-device safety. |
 | `TEST-06-04` | omission, permission-key absence, keyboard, and accessibility-semantic tests |
 | `MANUAL-06-04` | VoiceOver and Full Keyboard Access pass/fail with supported, ambiguous, and hidden states |
 | `TEST-06-05` | `make check-review SPEC=06` against the final approved review report |
 
 Manually test DDC, unique Core Audio association, ambiguous routes, unplug,
 route changes, sleep/wake, keyboard, and VoiceOver on native Intel and Apple
-Silicon. Approved evidence lives in
+Intel. Approved evidence lives in
 `specs/reviews/06-volume-and-mute-review.md`.
 
 ## Code Quality and Automatic Review

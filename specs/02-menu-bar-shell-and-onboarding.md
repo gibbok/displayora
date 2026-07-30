@@ -214,7 +214,7 @@ stateDiagram-v2
   Items Settings after `requiresApproval` is reported.
 - **DORA-02-016 — Architecture parity and approval.** The same source,
   persistence key, ServiceManagement behavior, presentation states, and
-  tests apply on native Intel and Apple Silicon Macs running macOS 13+.
+  tests apply on native Intel Macs running macOS 13+.
   Before implementation is `Verified`, a different Codex reviewer must approve
   `specs/reviews/02-menu-bar-shell-and-onboarding-review.md` under the
   automatic gate below.
@@ -350,10 +350,9 @@ Items button appears only for `requiresApproval`.
 - All new targets deploy to macOS 13.0. `SMAppService.mainApp` is the only
   launch-at-login mechanism and is available at the deployment target.
   Later APIs require an explicit availability check and a macOS 13 path.
-- UI, persistence, and ServiceManagement use identical Intel/Apple Silicon
+- UI, persistence, and ServiceManagement use the Intel macOS implementation
   code; architecture conditional compilation is prohibited.
 - Native checks verify Settings/login operations create no Dock icon. Rosetta
-  is not native Apple Silicon evidence.
 - Display status is presentation-only; HDR, identity, lifecycle, probing, and
   recovery remain Specification 03 work.
 - This specification uses no private API. Its AppKit Settings-opening fallback
@@ -395,7 +394,7 @@ named.
 | `AC-02-06` | `DORA-02-010` | Given fake ServiceManagement states and operations, When the launch-at-login adapter queries, enables, or disables, Then every status and typed error maps correctly, no operation occurs before user action, and no legacy mechanism is referenced. | `TEST-02-06` |
 | `AC-02-07` | `DORA-02-011`, `DORA-02-012` | Given enabled, disabled, requires-approval, unavailable, operation-failure, app-activation, and login-launch cases, When General is used, Then the toggle reflects re-queried truth, approval guidance is honest, external changes reconcile, and no window opens automatically. | `TEST-02-07`, `MANUAL-02-07` |
 | `AC-02-08` | `DORA-02-013`, `DORA-02-014`, `DORA-02-015` | Given VoiceOver, Full Keyboard Access, accessibility display options, and every shell state, When the app is navigated at 200% scaling, Then all state and actions are labeled, ordered, visible, operable, announced without repetition, and no TCC prompt appears. | `TEST-02-08`, `MANUAL-02-08` |
-| `AC-02-09` | `DORA-02-016` | Given the same universal app on native Intel and Apple Silicon Macs, When empty, welcome, Settings, login-item, and fixture-equivalent shell paths are checked, Then behavior matches without Rosetta dependence, private APIs, or architecture branches. | `MANUAL-02-09` |
+| `AC-02-09` | `DORA-02-016` | Given the Intel-only app on a native Intel Mac, When empty, welcome, Settings, login-item, and fixture-equivalent shell paths are checked, Then behavior matches without private APIs or architecture branches. | `MANUAL-02-09` |
 | `AC-02-10` | `DORA-02-002`, `DORA-02-003`, `DORA-02-016` | Given `DISPLAYORA_FEATURES=''` and shell fixture verification, When focused, architecture, and full-regression checks run, Then the empty and single-feature compositions pass, optional sibling features remain absent, and a different Codex reviewer records Approved only after automatic repairs leave zero Blocking findings. | `TEST-02-10` |
 
 ## Verification
@@ -461,12 +460,11 @@ without that approved evidence must fail.
 | `MANUAL-02-01` | Steps 1 and 3 below, recording one popover, one Settings window, menu-bar-only presence, and no runtime activation-policy change |
 | `MANUAL-02-07` | Steps 4 and 5, recording register/unregister, approval guidance, Login Items navigation, login launch, revocation, and final disabled state |
 | `MANUAL-02-08` | Steps 2 and 6 with VoiceOver, Full Keyboard Access, accessibility display options, 200% scaling, and confirmation that no TCC prompt appears |
-| `MANUAL-02-09` | The architecture commands and all seven steps on both native Intel and native Apple Silicon using the identical bundle |
+| `MANUAL-02-09` | The architecture commands and all seven steps on a native Intel Mac |
 
 ### Manual macOS verification
 
-Using one disposable-user native Intel Mac and Apple Silicon Mac on macOS 13+
-and the same universal app:
+Using one disposable-user native Intel Mac on macOS 13+ and the Intel-only app:
 
 ```sh
 uname -m
@@ -475,7 +473,7 @@ open dist/Displayora.app
 ps -axo pid,arch,comm | grep '[D]isplayora.app/Contents/MacOS/Displayora'
 ```
 
-1. Confirm Intel reports `x86_64`, Apple Silicon `arm64`, and the app appears
+1. Confirm the Mac and process report `x86_64` and the app appears
    only in the menu bar.
 2. Verify loading, first-run copy, no permission prompt, Continue persistence,
    and VoiceOver/keyboard order through welcome, Settings, and Quit.
@@ -558,7 +556,7 @@ implementation, prohibited display IDs and adapter policy in the shell, and
 made controls-plus-`nil` invalid in composition tests. It introduced the fake
 ServiceManagement facade and volatile defaults suite, defined forbidden-edge
 architecture scans, added exact empty and single-fixture verification, and
-made native Intel and Apple Silicon evidence and the independent Codex
+made native Intel evidence and the independent Codex
 automatic-repair approval gate traceable.
 
 ## Pull Request Handoff

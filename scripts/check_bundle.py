@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a universal, ad-hoc-signed Displayora application bundle."""
+"""Validate an Intel-only, ad-hoc-signed Displayora application bundle."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_ARCHITECTURES = {"arm64", "x86_64"}
+EXPECTED_ARCHITECTURE = "x86_64"
 
 
 def run(*arguments: str) -> subprocess.CompletedProcess[str]:
@@ -51,13 +51,13 @@ def main() -> int:
         if plist.get(key) != value:
             errors.append(f"installed plist {key} is {plist.get(key)!r}, expected {value!r}")
 
-    arch_result = run("lipo", "-archs", str(executable))
-    architectures = set(arch_result.stdout.split()) if arch_result.returncode == 0 else set()
-    if architectures != EXPECTED_ARCHITECTURES:
+    arch_result = run("file", "-b", str(executable))
+    architecture = EXPECTED_ARCHITECTURE if arch_result.returncode == 0 and EXPECTED_ARCHITECTURE in arch_result.stdout else None
+    if architecture != EXPECTED_ARCHITECTURE:
         errors.append(
             "bundle architectures are "
-            + (", ".join(sorted(architectures)) or "unreadable")
-            + "; expected arm64 and x86_64"
+            + (architecture or "unreadable")
+            + "; expected x86_64"
         )
 
     loads = run("otool", "-L", str(executable))
@@ -81,7 +81,7 @@ def main() -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
-    print(f"Validated universal signed bundle: {app}")
+    print(f"Validated Intel-only signed bundle: {app}")
     return 0
 
 

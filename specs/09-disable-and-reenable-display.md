@@ -83,7 +83,7 @@ stateDiagram-v2
   feature-owned display is confirmed enabled.
 - **DORA-09-010:** Confirmation, countdown, recovery, and errors are keyboard
   and VoiceOver accessible and require no TCC permission.
-- **DORA-09-011:** Native Intel and Apple Silicon tests are mandatory because
+- **DORA-09-011:** Native Intel tests are mandatory because
   private behavior may differ.
 - **DORA-09-012:** Independent Codex review automatically repairs findings and
   must record `Approved` before `Verified`.
@@ -124,7 +124,7 @@ permission is requested.
 ## Platform Considerations
 
 Runtime symbol and behavior checks run independently on macOS 13+ Intel and
-Apple Silicon. Absence or changed behavior disables the private path without a
+Intel. Absence or changed behavior disables the private path without a
 crash. Native verification—not Rosetta alone—is required.
 
 ## Standalone and Omission Behavior
@@ -145,7 +145,7 @@ import. No sibling is required. Run `make check-architecture`.
 | `AC-09-01` | `DORA-09-001`, `DORA-09-002`, `DORA-09-003` | Given available and missing symbols, When disable is requested, Then private use is isolated, runtime checked, and `.forAppOnly`. | `TEST-09-01` |
 | `AC-09-02` | `DORA-09-004`, `DORA-09-005`, `DORA-09-006` | Given one or multiple usable displays, When disable/keep/timer/quit occur, Then the final display is protected and owned state restores. | `TEST-09-02`, `MANUAL-09-02` |
 | `AC-09-03` | `DORA-09-007`, `DORA-09-008`, `DORA-09-009` | Given lifecycle changes, private-path uncertainty, and partial fallback failures, When reconciliation and recovery run, Then fallback starts only from confirmed unchanged topology, rollback is ordered, and UI reports only confirmed state. | `TEST-09-03`, `MANUAL-09-03` |
-| `AC-09-04` | `DORA-09-010`, `DORA-09-011` | Given native Intel/Apple Silicon and assistive technology, When all states are exercised, Then behavior is recoverable and accessible without permission. | `MANUAL-09-04` |
+| `AC-09-04` | `DORA-09-010`, `DORA-09-011` | Given native Intel and assistive technology, When all states are exercised, Then behavior is recoverable and accessible without permission. | `MANUAL-09-04` |
 | `AC-09-05` | `DORA-09-012` | Given implementation evidence, When a different Codex reviewer runs automatic repair, Then zero Blocking findings and `Approved` precede `Verified`. | `TEST-09-05` |
 
 ## Verification
@@ -164,15 +164,15 @@ git diff --check
 |---|---|
 | `TEST-09-01` | private-adapter symbol/signature/scope fixtures proving runtime absence is typed and private calls cannot escape the adapter |
 | `TEST-09-02` | virtual-clock final-display guard, confirmation, Keep Disabled, 30-second recovery, idempotent re-enable, quit, and shutdown tests |
-| `MANUAL-09-02` | On native Intel and Apple Silicon with at least two usable displays, record final-display rejection, countdown recovery, Keep Disabled, re-enable, quit restoration, and process architecture. |
+| `MANUAL-09-02` | On native Intel with at least two usable displays, record final-display rejection, countdown recovery, Keep Disabled, re-enable, quit restoration, and process architecture. |
 | `TEST-09-03` | topology reconciliation and transaction-failure tests proving fallback starts only from confirmed unchanged topology and partial fallback rolls back in reverse order |
 | `MANUAL-09-03` | Record private-path unavailable/error behavior, fallback result, unplug/sleep/topology change, retry, persistent guidance, and confirmed final topology on both architectures. |
-| `MANUAL-09-04` | VoiceOver and Full Keyboard Access pass/fail for destructive confirmation, Cancel-first focus, countdown, recovery, and errors on native Intel and Apple Silicon. |
+| `MANUAL-09-04` | VoiceOver and Full Keyboard Access pass/fail for destructive confirmation, Cancel-first focus, countdown, recovery, and errors on native Intel. |
 | `TEST-09-05` | `make check-review SPEC=09` against the final approved review report |
 
 Manually verify final-display protection, timed recovery, keep/re-enable,
 sleep, unplug, quit, private-path absence, fallback rollback, keyboard, and
-VoiceOver on native Intel and Apple Silicon. Review report:
+VoiceOver on native Intel. Review report:
 `specs/reviews/09-disable-and-reenable-display-review.md`.
 
 ## Code Quality and Automatic Review

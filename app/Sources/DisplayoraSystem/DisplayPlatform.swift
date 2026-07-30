@@ -1,4 +1,6 @@
 import DisplayoraDisplay
+import ColorSync
+import CoreGraphics
 import Foundation
 
 public struct DisplayInventoryRecord: Sendable, Equatable {
@@ -23,6 +25,41 @@ public struct DisplayInventoryRecord: Sendable, Equatable {
 public protocol DisplayInventoryReading: Sendable {
   func enumerate() async throws -> [DisplayInventoryRecord]
 }
+
+public struct CoreGraphicsDisplayInventory: DisplayInventoryReading {
+  private let identities: DisplayIdentityResolver
+
+  public init(identities: DisplayIdentityResolver = DisplayIdentityResolver()) {
+    self.identities = identities
+  }
+
+  public func enumerate() async throws -> [DisplayInventoryRecord] {
+    var count: UInt32 = 0
+    guard CGGetOnlineDisplayList(0, nil, &count) == .success else {
+      throw DisplayInventoryError.enumerationFailed
+    }
+    var runtimeIDs = Array(repeating: CGDirectDisplayID(), count: Int(count))
+    guard CGGetOnlineDisplayList(count, &runtimeIDs, &count) == .success else {
+      throw DisplayInventoryError.enumerationFailed
+    }
+    return runtimeIDs.prefix(Int(count)).enumerated().map { index, runtimeID in
+      let uuid = CGDisplayCreateUUIDFromDisplayID(runtimeID).map {
+        UUID(uuidString: CFUUIDCreateString(nil, $0.takeRetainedValue()) as String)
+      } ?? nil
+      let identity = identities.resolve(
+        DisplayIdentityMaterial(
+          systemUUID: uuid, manufacturer: nil, product: nil, serial: nil,
+          connectionToken: String(index)))
+      return DisplayInventoryRecord(
+        id: identity.0, stability: identity.1, name: "Display", 
+        isBuiltIn: CGDisplayIsBuiltin(runtimeID) != 0,
+        isActive: CGDisplayIsActive(runtimeID) != 0,
+        dynamicRange: .unknown)
+    }
+  }
+}
+
+public enum DisplayInventoryError: Error, Sendable { case enumerationFailed }
 public protocol DisplayLifecycleObserving: Sendable {
   func events() -> AsyncStream<DisplayLifecycleEvent>
 }

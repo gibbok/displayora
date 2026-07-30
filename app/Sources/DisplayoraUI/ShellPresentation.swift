@@ -91,9 +91,17 @@ public struct MenuBarRoot: View {
           .accessibilityLabel("Displayora")
         content
         Divider()
-        Button("Settings…") { perform(.openSettings) }
+        if #available(macOS 14.0, *) {
+          SettingsLink {
+            Text("Settings…")
+          }
           .keyboardShortcut(",")
           .accessibilityLabel("Open Displayora Settings")
+        } else {
+          Button("Settings…") { perform(.openSettings) }
+            .keyboardShortcut(",")
+            .accessibilityLabel("Open Displayora Settings")
+        }
         Button("Quit Displayora") { perform(.quit) }
           .keyboardShortcut("q")
           .accessibilityLabel("Quit Displayora")

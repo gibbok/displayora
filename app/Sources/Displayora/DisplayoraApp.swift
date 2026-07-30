@@ -55,9 +55,8 @@ private enum SettingsWindowOpener {
   )
 
   static func open() {
-    if #available(macOS 14.0, *) {
-      NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-    } else if !AppKitSettingsOpener().openSettings() {
+    NSApp.activate(ignoringOtherApps: true)
+    if !AppKitSettingsOpener().openSettings() {
       logger.error("AppKit did not accept the Settings window action.")
     }
   }

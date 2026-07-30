@@ -22,6 +22,7 @@ def main() -> int:
 
     required_targets = [
         "DisplayoraCore",
+        "DisplayoraDisplay",
         "DisplayoraUI",
         "DisplayoraComposition",
         "DisplayoraSystem",
@@ -98,10 +99,12 @@ def main() -> int:
         }
         expected_dependencies = {
             "DisplayoraCore": set(),
-            "DisplayoraUI": {"DisplayoraCore"},
-            "DisplayoraComposition": {"DisplayoraUI"},
-            "DisplayoraSystem": {"DisplayoraCore"},
-            "Displayora": {"DisplayoraComposition", "DisplayoraSystem", "DisplayoraUI"},
+            "DisplayoraCore": set(),
+            "DisplayoraDisplay": {"DisplayoraCore"},
+            "DisplayoraUI": {"DisplayoraCore", "DisplayoraDisplay"},
+            "DisplayoraComposition": {"DisplayoraDisplay", "DisplayoraUI"},
+            "DisplayoraSystem": {"DisplayoraCore", "DisplayoraDisplay"},
+            "Displayora": {"DisplayoraComposition", "DisplayoraDisplay", "DisplayoraSystem", "DisplayoraUI"},
             "DisplayoraFeatureTestHost": {"DisplayoraComposition", "DisplayoraUI"},
             "DisplayoraTestSupport": {"Testing"},
             "DisplayoraCoreTests": {"DisplayoraCore", "DisplayoraTestSupport"},
@@ -110,16 +113,18 @@ def main() -> int:
                 "DisplayoraTestSupport",
                 "DisplayoraUI",
             },
-            "DisplayoraSystemTests": {"DisplayoraSystem", "DisplayoraTestSupport"},
+            "DisplayoraSystemTests": {"DisplayoraDisplay", "DisplayoraSystem", "DisplayoraTestSupport"},
             "DisplayoraCompositionTests": {
                 "DisplayoraComposition",
                 "DisplayoraCore",
+                "DisplayoraDisplay",
                 "DisplayoraTestSupport",
                 "DisplayoraUI",
             },
             "DisplayoraTests": {
                 "Displayora",
                 "DisplayoraCore",
+                "DisplayoraDisplay",
                 "DisplayoraSystem",
                 "DisplayoraTestSupport",
                 "DisplayoraUI",
@@ -149,8 +154,9 @@ def main() -> int:
         imports[source_dir.name] = module_imports
 
     forbidden_imports = {
-        "DisplayoraCore": {"DisplayoraUI", "DisplayoraComposition"},
-        "DisplayoraUI": {"DisplayoraComposition"},
+        "DisplayoraCore": {"DisplayoraDisplay", "DisplayoraUI", "DisplayoraComposition", "DisplayoraSystem"},
+        "DisplayoraDisplay": {"DisplayoraUI", "DisplayoraComposition", "DisplayoraSystem"},
+        "DisplayoraUI": {"DisplayoraComposition", "DisplayoraSystem"},
         "DisplayoraSystem": {"DisplayoraUI", "DisplayoraComposition"},
     }
     for module, forbidden in forbidden_imports.items():

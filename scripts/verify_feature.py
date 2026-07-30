@@ -34,7 +34,7 @@ def main() -> int:
     if scope not in PLATFORM_SCOPES | OPTIONAL_SCOPES:
         print(f"Unknown verification scope '{scope}'.", file=sys.stderr)
         return 2
-    if scope not in {"foundation", "shell"}:
+    if scope not in {"foundation", "shell", "display-platform"}:
         print(f"Verification scope '{scope}' is recognized but not yet implemented.", file=sys.stderr)
         return 2
 

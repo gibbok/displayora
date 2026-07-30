@@ -1,5 +1,6 @@
 import AppKit
 import DisplayoraComposition
+import DisplayoraSystem
 import DisplayoraUI
 import OSLog
 import SwiftUI
@@ -10,14 +11,16 @@ struct DisplayoraApp: App {
 
   @MainActor
   init() {
+    let platform = DisplayPlatform(inventory: CoreGraphicsDisplayInventory())
+    let statusProvider = PlatformShellStatusProvider(platform: platform)
     #if DISPLAYORA_FOUNDATION_UI_HARNESS
       let harness = FoundationUIHarness(arguments: ProcessInfo.processInfo.arguments)
-      let applicationModel = ApplicationModel(installedFeatures: harness.installedFeatures)
+      let applicationModel = ApplicationModel(installedFeatures: harness.installedFeatures, displayStatusProvider: statusProvider)
       if harness.shouldLoad {
         applicationModel.load()
       }
     #else
-      let applicationModel = ApplicationModel(installedFeatures: makeInstalledFeatures())
+      let applicationModel = ApplicationModel(installedFeatures: makeInstalledFeatures(), displayStatusProvider: statusProvider)
       applicationModel.load()
     #endif
     _model = StateObject(wrappedValue: applicationModel)

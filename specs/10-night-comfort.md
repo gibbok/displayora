@@ -115,7 +115,7 @@ local times.
 
 ## Platform Considerations
 
-macOS 13+, Intel, and Apple Silicon share the same calendar logic. Tests cover
+macOS 13+ Intel systems share the same calendar logic. Tests cover
 spring-forward, fall-back, timezone changes, overnight ranges, sleep/wake, and
 HDR. The current system timezone is authoritative.
 
@@ -157,14 +157,14 @@ git diff --check
 | `TEST-10-01` | standalone manual-warmth curve, owner isolation, composition order, and omitted-sibling tests |
 | `TEST-10-02` | virtual-clock/calendar table tests for same-day, overnight, equal, spring-forward, fall-back, timezone, locale, wall-clock, sleep, and wake cases |
 | `TEST-10-03` | Manual/Schedule suspension tests for HDR, unknown safety, unavailable display, apply failure, boundary crossing while suspended, wake/reconnect, Off, removal, and quit |
-| `MANUAL-10-03` | On native Intel and Apple Silicon, record manual/scheduled warmth, exact pause reason, HDR or documented limitation, sleep/wake, reconnect, quit restoration, and process architecture. |
+| `MANUAL-10-03` | On native Intel, record manual/scheduled warmth, exact pause reason, HDR or documented limitation, sleep/wake, reconnect, quit restoration, and process architecture. |
 | `TEST-10-04` | time-field labels, mode/status semantics, pause reasons, keyboard, VoiceOver, and absence of permission keys |
 | `MANUAL-10-04` | VoiceOver and Full Keyboard Access pass/fail for Off, Manual, Schedule, time fields, next boundary, suspended, and apply-failure states |
 | `TEST-10-05` | `make check-review SPEC=10` against the final approved review report |
 
 Manual verification covers manual warmth, same-day/overnight schedules,
 timezone/DST, sleep/wake, HDR, reconnect, quit, keyboard, and VoiceOver on
-native Intel and Apple Silicon. Review report:
+native Intel. Review report:
 `specs/reviews/10-night-comfort-review.md`.
 
 ## Code Quality and Automatic Review

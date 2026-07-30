@@ -63,7 +63,7 @@ stateDiagram-v2
   claims the original was restored.
 - **DORA-07-009:** Confirmation is keyboard/VoiceOver accessible, does not rely
   on animation or color, and requests no permission.
-- **DORA-07-010:** Native Intel and Apple Silicon evidence plus independent
+- **DORA-07-010:** Native Intel evidence plus independent
   Codex automatic review are required before `Verified`.
 
 ## Interfaces and Data Flow
@@ -95,9 +95,9 @@ every second. No Accessibility or other TCC permission is requested.
 
 ## Platform Considerations
 
-Use public Core Graphics on macOS 13+ with identical Intel/Apple Silicon
+Use public Core Graphics on macOS 13+ with Intel-only
 behavior. HDR modes are not inferred from resolution. Native manual checks
-include an external display and the same universal app on both architectures.
+include an external display and the Intel-only app.
 
 ## Standalone and Omission Behavior
 
@@ -137,14 +137,14 @@ git diff --check
 | `TEST-07-01` | `ResolutionModeOptionTests` with duplicate, HiDPI, logical/pixel, fixed/variable refresh, current, and stable-sort fixtures |
 | `TEST-07-02` | virtual-clock apply/Keep/15-second timeout tests with exact original-mode capture and one pending confirmation |
 | `TEST-07-03` | disconnect, sleep, quit, stale endpoint, failed apply, failed revert, and actual-mode refresh tests |
-| `MANUAL-07-03` | On native Intel and Apple Silicon, record original/selected/restored mode IDs, timeout, popover closure, disconnect, sleep, quit, failure guidance, and process architecture. |
+| `MANUAL-07-03` | On native Intel, record original/selected/restored mode IDs, timeout, popover closure, disconnect, sleep, quit, failure guidance, and process architecture. |
 | `TEST-07-04` | confirmation focus order, countdown announcement, keyboard, and accessibility-semantic tests |
 | `MANUAL-07-04` | VoiceOver and Full Keyboard Access pass/fail for mode selection, Keep, Revert, and countdown |
 | `TEST-07-05` | `make check-review SPEC=07` against the final approved review report |
 
 Manually verify labels, Keep, timeout revert, popover closure, disconnect,
 sleep, quit, failure, keyboard, and VoiceOver on native Intel and Apple
-Silicon. Review evidence:
+Intel. Review evidence:
 `specs/reviews/07-resolution-selector-review.md`.
 
 ## Code Quality and Automatic Review

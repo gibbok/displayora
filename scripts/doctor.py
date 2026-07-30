@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 
-REQUIRED = ["swift", "python3", "make", "lipo", "otool", "plutil", "codesign"]
+REQUIRED = ["swift", "python3", "make", "file", "otool", "plutil", "codesign"]
 
 
 def main() -> int:

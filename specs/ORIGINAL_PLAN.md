@@ -8,8 +8,8 @@ to resolve ambiguity.
 
 **Displayora — Your displays, made simple.**
 
-Displayora is a macOS 13+ menu-bar application for Intel and Apple Silicon
-Macs. It uses a small menu-bar popover and a separate Settings window, has no
+Displayora is a macOS 13+ menu-bar application for Intel Macs only. It uses a
+small menu-bar popover and a separate Settings window, has no
 permanent Dock icon, and is distributed directly as a notarized DMG using the
 bundle identifier `com.displayora.Displayora`.
 
@@ -33,8 +33,7 @@ composes it in a test host.
 
 The project is Swift 6 and SwiftPM based under `app/`. Development and release
 workflows are terminal-only: no `.xcodeproj`, Xcode GUI, or `xcodebuild`.
-Universal output is made from separate `x86_64` and `arm64` builds combined
-with `lipo`.
+Intel-only output is made from a single `x86_64` build.
 
 ## Specification Sequence
 
@@ -57,7 +56,7 @@ with `lipo`.
 ### 01 — Project Foundation
 
 Create the SwiftPM project, SwiftUI menu-bar executable, Settings scene,
-feature registry, isolated feature test host, terminal workflow, universal app
+feature registry, isolated feature test host, terminal workflow, Intel-only app
 assembly, ad-hoc signing, warning-free builds, and strict concurrency checks.
 
 ### 02 — Menu-Bar Shell and Onboarding
@@ -104,7 +103,7 @@ Accessibility permission. Only installed features contribute commands.
 Use an isolated, runtime-checked, LightsOut-inspired
 `CGSConfigureDisplayEnabled` adapter with `.forAppOnly`, final-display
 protection, timed recovery, and termination restoration. Supply a
-mirror-plus-gamma fallback and verify natively on Intel and Apple Silicon.
+mirror-plus-gamma fallback and verify natively on Intel.
 
 ### 10 — Night Comfort
 
@@ -114,9 +113,9 @@ schedules, timezone changes, sleep/wake, HDR, and restoration.
 
 ### 11 — Direct Distribution and Release
 
-Release any selected feature subset as a universal `.app` and downloadable
+Release any selected feature subset as an Intel-only `.app` and downloadable
 DMG. Apply Developer ID signing, Hardened Runtime, notarization, and stapling;
-run native Intel and Apple Silicon smoke tests; and publish a manifest listing
+run native Intel smoke tests; and publish a manifest listing
 included and omitted features. No gate depends on an intentionally omitted
 feature.
 
@@ -126,8 +125,8 @@ Each numbered specification contains metadata, dependencies, goal, non-goals,
 classification, a Mermaid UX or state diagram, stable requirement IDs,
 interfaces and data flow, novice-focused UI behavior, accessibility,
 permissions, failures, recovery, Given/When/Then acceptance criteria mapped to
-requirements and tests, exact automated and manual verification, Intel and
-Apple Silicon considerations, standalone and omission behavior, and the
+requirements and tests, exact automated and manual verification, Intel
+considerations, standalone and omission behavior, and the
 mandatory code-quality and automatic-review gate.
 
 Each author records two self-review and revision passes. A finished
@@ -205,7 +204,7 @@ formatting, focused tests, regression tests, and strict concurrency checks.
 
 ## Locked Decisions
 
-- Minimum platform: macOS 13 on Intel and Apple Silicon.
+- Minimum platform: macOS 13 on Intel (`x86_64`) only.
 - UI: menu-bar popover plus a separate Settings window, no permanent Dock icon.
 - Distribution: direct notarized DMG.
 - Bundle identifier: `com.displayora.Displayora`.

@@ -3,7 +3,7 @@
 **Your displays, made simple.**
 
 Displayora is specified as a modular macOS 13+ menu-bar application for Intel
-and Apple Silicon. The implementation is intentionally preceded by a
+Macs only. The implementation is intentionally preceded by a
 standalone, incrementally committed specification suite.
 
 - [Original approved plan](specs/ORIGINAL_PLAN.md)
@@ -27,9 +27,9 @@ make run-installed
 ```
 
 `make install` creates or safely replaces
-`~/Applications/Displayora.app`. It validates the universal `arm64`/`x86_64`
-binary, locked Info.plist, system load paths, executable permissions, and
-ad-hoc signature before committing the replacement. A failed replacement
+`~/Applications/Displayora.app`. It validates the Intel `x86_64` binary,
+locked Info.plist, system load paths, executable permissions, and ad-hoc
+signature before committing the replacement. A failed replacement
 restores the prior installation. `make clean` removes only `app/.build` and
 `dist`; it never removes the installed application.
 
@@ -44,7 +44,7 @@ make run-ui-harness STATE=populated
 make run-ui-harness STATE=failed
 ```
 
-The harness is forced off by universal bundle and installation workflows and
+The harness is forced off by bundle and installation workflows and
 is rejected if its fixture marker appears in a production bundle.
 
 ## Make commands

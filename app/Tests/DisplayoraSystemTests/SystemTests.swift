@@ -30,6 +30,17 @@ struct DisplayPlatformTests {
     XCTAssertEqual(snapshot?.phase, .failed(.enumerationFailed))
     XCTAssertTrue(snapshot?.displays.isEmpty ?? false)
   }
+
+  @Test func testChangeEventCoalescesIntoOneFreshReconciliation() async throws {
+    let inventory = ScriptedInventory(records: [])
+    let platform = DisplayPlatform(inventory: inventory)
+    await platform.receive(.changed)
+    await platform.receive(.changed)
+    try await Task.sleep(for: .milliseconds(260))
+    var iterator = await platform.snapshots().makeAsyncIterator()
+    XCTAssertEqual(await iterator.next()?.phase, .ready)
+    XCTAssertEqual(await inventory.enumerationCount(), 1)
+  }
 }
 
 struct DisplayIdentityResolverTests {
@@ -87,14 +98,17 @@ struct ColorTransformCoordinatorTests {
 private actor ScriptedInventory: DisplayInventoryReading {
   let records: [DisplayInventoryRecord]
   let shouldFail: Bool
+  private var count = 0
   init(records: [DisplayInventoryRecord], shouldFail: Bool = false) {
     self.records = records
     self.shouldFail = shouldFail
   }
   func enumerate() async throws -> [DisplayInventoryRecord] {
+    count += 1
     if shouldFail { throw FixtureError.expected }
     return records
   }
+  func enumerationCount() -> Int { count }
 }
 
 private actor ScriptedColorBackend: ColorTransformBackend {

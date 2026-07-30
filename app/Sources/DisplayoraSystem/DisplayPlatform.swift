@@ -70,8 +70,18 @@ public actor DisplayPlatform: DisplayPlatformReading {
   private var snapshot = DisplayPlatformSnapshot(revision: 0, phase: .starting, displays: [])
   private var continuations: [UUID: AsyncStream<DisplayPlatformSnapshot>.Continuation] = [:]
   private var reconciliationTask: Task<Void, Never>?
-  public init(inventory: any DisplayInventoryReading) { self.inventory = inventory }
-  deinit { reconciliationTask?.cancel() }
+  private var lifecycleTask: Task<Void, Never>?
+  private var wakeTask: Task<Void, Never>?
+
+  public init(inventory: any DisplayInventoryReading) {
+    self.inventory = inventory
+  }
+
+  deinit {
+    reconciliationTask?.cancel()
+    lifecycleTask?.cancel()
+    wakeTask?.cancel()
+  }
   public func snapshots() -> AsyncStream<DisplayPlatformSnapshot> {
     let token = UUID()
     let current = snapshot
@@ -82,7 +92,30 @@ public actor DisplayPlatform: DisplayPlatformReading {
       }
     }
   }
-  public func retry() async { await reconcile() }
+  public func retry() async {
+    reconciliationTask?.cancel()
+    await reconcile()
+  }
+
+  public func start(observing lifecycle: any DisplayLifecycleObserving) {
+    lifecycleTask?.cancel()
+    lifecycleTask = Task { [weak self] in
+      for await event in lifecycle.events() {
+        await self?.receive(event)
+      }
+    }
+  }
+
+  public func receive(_ event: DisplayLifecycleEvent) {
+    switch event {
+    case .changed:
+      scheduleReconciliation(after: .milliseconds(200))
+    case .willSleep:
+      willSleep()
+    case .didWake:
+      didWake()
+    }
+  }
   public func reconcile() async {
     publish(phase: .reconciling, displays: snapshot.displays)
     do {
@@ -97,12 +130,24 @@ public actor DisplayPlatform: DisplayPlatformReading {
   }
   public func willSleep() {
     reconciliationTask?.cancel()
+    wakeTask?.cancel()
     publish(phase: .sleeping, displays: [])
   }
   public func didWake() {
     reconciliationTask?.cancel()
-    reconciliationTask = Task {
+    publish(phase: .reconciling, displays: [])
+    wakeTask?.cancel()
+    wakeTask = Task {
       try? await Task.sleep(for: .seconds(1))
+      guard !Task.isCancelled else { return }
+      await self.reconcile()
+    }
+  }
+
+  private func scheduleReconciliation(after duration: Duration) {
+    reconciliationTask?.cancel()
+    reconciliationTask = Task {
+      try? await Task.sleep(for: duration)
       guard !Task.isCancelled else { return }
       await self.reconcile()
     }

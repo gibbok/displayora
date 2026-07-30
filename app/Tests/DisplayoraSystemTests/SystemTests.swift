@@ -93,6 +93,22 @@ struct ColorTransformCoordinatorTests {
     try await coordinator.remove(owner: second.owner, from: display)
     XCTAssertEqual(await backend.lastApplied(), baseline)
   }
+
+  @Test func testUnsafeDynamicRangeRestoresAndDropsPriorContribution() async throws {
+    let display = DisplayID(rawValue: "display.hdr")
+    let baseline = try makeCurve(1)
+    let backend = ScriptedColorBackend(baseline: baseline)
+    let coordinator = ColorTransformCoordinator(backend: backend)
+    let contribution = ColorTransformContribution(
+      owner: ColorTransformOwnerID(rawValue: "feature.one"), priority: 100,
+      curve: try makeCurve(0.5))
+    try await coordinator.set(contribution, for: display)
+    await backend.setSafe(false)
+    await XCTAssertThrowsErrorAsync {
+      try await coordinator.set(contribution, for: display)
+    }
+    XCTAssertEqual(await backend.lastApplied(), baseline)
+  }
 }
 
 private actor ScriptedInventory: DisplayInventoryReading {
@@ -114,12 +130,18 @@ private actor ScriptedInventory: DisplayInventoryReading {
 private actor ScriptedColorBackend: ColorTransformBackend {
   let savedBaseline: ColorCurve
   private var applied: ColorCurve?
+  private var safe = true
   init(baseline: ColorCurve) { savedBaseline = baseline }
   func baseline(for display: DisplayID) async throws -> ColorCurve { savedBaseline }
   func apply(_ curve: ColorCurve, to display: DisplayID) async throws { applied = curve }
   func restore(_ curve: ColorCurve, to display: DisplayID) async throws { applied = curve }
-  func isSafe(for display: DisplayID) async -> Bool { true }
+  func isSafe(for display: DisplayID) async -> Bool { safe }
+  func setSafe(_ value: Bool) { safe = value }
   func lastApplied() -> ColorCurve? { applied }
+}
+
+private func XCTAssertThrowsErrorAsync(_ expression: () async throws -> Void) async {
+  do { try await expression(); XCTFail("Expected an error to be thrown") } catch {}
 }
 
 private enum FixtureError: Error { case expected }

@@ -16,7 +16,10 @@ public actor ColorTransformCoordinator: ColorTransformCoordinating {
     [:]
   public init(backend: any ColorTransformBackend) { self.backend = backend }
   public func set(_ contribution: ColorTransformContribution, for display: DisplayID) async throws {
-    guard await backend.isSafe(for: display) else { throw ColorTransformError.unsafeDynamicRange }
+    guard await backend.isSafe(for: display) else {
+      await invalidate(display: display)
+      throw ColorTransformError.unsafeDynamicRange
+    }
     let baseline = try await baseline(for: display)
     var staged = contributions[display] ?? [:]
     staged[contribution.owner] = contribution
@@ -54,6 +57,14 @@ public actor ColorTransformCoordinator: ColorTransformCoordinating {
     for (display, baseline) in baselines { try? await backend.restore(baseline, to: display) }
     baselines = [:]
     contributions = [:]
+    publish()
+  }
+
+  public func invalidate(display: DisplayID) async {
+    guard let baseline = baselines[display] else { return }
+    try? await backend.restore(baseline, to: display)
+    baselines[display] = nil
+    contributions[display] = nil
     publish()
   }
   public func states() -> AsyncStream<[DisplayID: ColorTransformState]> {

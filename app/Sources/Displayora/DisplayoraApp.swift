@@ -1,5 +1,6 @@
 import AppKit
 import DisplayoraComposition
+import DisplayoraSystem
 import DisplayoraUI
 import OSLog
 import SwiftUI
@@ -10,14 +11,16 @@ struct DisplayoraApp: App {
 
   @MainActor
   init() {
+    let platform = DisplayPlatform(inventory: CoreGraphicsDisplayInventory())
+    let statusProvider = PlatformShellStatusProvider(platform: platform)
     #if DISPLAYORA_FOUNDATION_UI_HARNESS
       let harness = FoundationUIHarness(arguments: ProcessInfo.processInfo.arguments)
-      let applicationModel = ApplicationModel(installedFeatures: harness.installedFeatures)
+      let applicationModel = ApplicationModel(installedFeatures: harness.installedFeatures, displayStatusProvider: statusProvider)
       if harness.shouldLoad {
         applicationModel.load()
       }
     #else
-      let applicationModel = ApplicationModel(installedFeatures: makeInstalledFeatures())
+      let applicationModel = ApplicationModel(installedFeatures: makeInstalledFeatures(), displayStatusProvider: statusProvider)
       applicationModel.load()
     #endif
     _model = StateObject(wrappedValue: applicationModel)
@@ -38,7 +41,7 @@ struct DisplayoraApp: App {
   private func perform(_ action: ShellAction) {
     switch action {
     case .openSettings:
-      SettingsWindowOpener.open()
+      SettingsWindowOpener.open(model: model)
     case .quit:
       NSApplication.shared.terminate(nil)
     default:
@@ -54,11 +57,32 @@ private enum SettingsWindowOpener {
     category: "Settings"
   )
 
-  static func open() {
-    if #available(macOS 14.0, *) {
-      NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-    } else if !AppKitSettingsOpener().openSettings() {
-      logger.error("AppKit did not accept the Settings window action.")
+  private static var window: NSWindow?
+
+  static func open(model: ApplicationModel) {
+    NSApp.activate(ignoringOtherApps: true)
+    if let window {
+      window.makeKeyAndOrderFront(nil)
+      return
     }
+    let controller = NSHostingController(rootView: ApplicationSettingsContainer(model: model))
+    let window = NSWindow(contentViewController: controller)
+    window.title = "Displayora Settings"
+    window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+    window.setContentSize(NSSize(width: 468, height: 360))
+    window.isReleasedWhenClosed = false
+    window.makeKeyAndOrderFront(nil)
+    Self.window = window
+    logger.info("Opened the Displayora Settings window.")
+  }
+}
+
+@MainActor
+private struct ApplicationSettingsContainer: View {
+  @ObservedObject var model: ApplicationModel
+
+  var body: some View {
+    SettingsRoot(presentation: model.settingsPresentation, perform: model.perform)
+      .onAppear { model.openedSettings() }
   }
 }

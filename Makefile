@@ -9,7 +9,7 @@ PACKAGE_FLAGS := --package-path app
 TEST_FLAGS := --scratch-path app/.build/native-sdk --disable-xctest
 
 .PHONY: doctor check-specs check-architecture check-review build test format run bundle \
-	install run-installed run-ui-harness test-install verify verify-feature clean
+	install run-installed run-ui-harness test-app test-install verify verify-feature clean
 
 doctor:
 	@python3 scripts/doctor.py
@@ -45,6 +45,11 @@ install: bundle
 
 run-installed:
 	@open "$${DISPLAYORA_INSTALL_DESTINATION:-$${HOME}/Applications/Displayora.app}"
+
+# Rebuild the Intel-only bundle and launch that exact artifact for a quick manual check.
+test-app: bundle
+	@pkill -x Displayora 2>/dev/null || true
+	@open dist/Displayora.app
 
 run-ui-harness:
 	@scripts/run-foundation-ui-harness.sh "$(STATE)"

@@ -76,6 +76,7 @@ let package = Package(
   platforms: [.macOS(.v13)],
   products: [
     .library(name: "DisplayoraCore", targets: ["DisplayoraCore"]),
+    .library(name: "DisplayoraDisplay", targets: ["DisplayoraDisplay"]),
     .library(name: "DisplayoraUI", targets: ["DisplayoraUI"]),
     .library(name: "DisplayoraComposition", targets: ["DisplayoraComposition"]),
     .library(name: "DisplayoraSystem", targets: ["DisplayoraSystem"]),
@@ -91,23 +92,30 @@ let package = Package(
       swiftSettings: strictSwiftSettings
     ),
     .target(
-      name: "DisplayoraUI",
+      name: "DisplayoraDisplay",
       dependencies: ["DisplayoraCore"],
+      swiftSettings: strictSwiftSettings
+    ),
+    .target(
+      name: "DisplayoraUI",
+      dependencies: ["DisplayoraCore", "DisplayoraDisplay"],
       swiftSettings: strictSwiftSettings
     ),
     .target(
       name: "DisplayoraComposition",
-      dependencies: ["DisplayoraUI"],
+      dependencies: ["DisplayoraDisplay", "DisplayoraUI"],
       swiftSettings: strictSwiftSettings
     ),
     .target(
       name: "DisplayoraSystem",
-      dependencies: ["DisplayoraCore"],
+      dependencies: ["DisplayoraCore", "DisplayoraDisplay"],
       swiftSettings: strictSwiftSettings
     ),
     .executableTarget(
       name: "Displayora",
-      dependencies: ["DisplayoraComposition", "DisplayoraSystem", "DisplayoraUI"],
+      dependencies: [
+        "DisplayoraComposition", "DisplayoraDisplay", "DisplayoraSystem", "DisplayoraUI",
+      ],
       swiftSettings: displayoraSwiftSettings
     ),
     .executableTarget(
@@ -133,7 +141,7 @@ let package = Package(
     ),
     .testTarget(
       name: "DisplayoraSystemTests",
-      dependencies: ["DisplayoraSystem", "DisplayoraTestSupport"],
+      dependencies: ["DisplayoraCore", "DisplayoraDisplay", "DisplayoraSystem", "DisplayoraTestSupport"],
       swiftSettings: strictSwiftSettings
     ),
     .testTarget(
@@ -141,6 +149,7 @@ let package = Package(
       dependencies: [
         "DisplayoraComposition",
         "DisplayoraCore",
+        "DisplayoraDisplay",
         "DisplayoraUI",
         "DisplayoraTestSupport",
       ],
@@ -151,6 +160,7 @@ let package = Package(
       dependencies: [
         "Displayora",
         "DisplayoraCore",
+        "DisplayoraDisplay",
         "DisplayoraSystem",
         "DisplayoraUI",
         "DisplayoraTestSupport",

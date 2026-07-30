@@ -92,11 +92,7 @@ public struct MenuBarRoot: View {
         content
         Divider()
         if #available(macOS 14.0, *) {
-          SettingsLink {
-            Text("Settings…")
-          }
-          .keyboardShortcut(",")
-          .accessibilityLabel("Open Displayora Settings")
+          ModernSettingsButton()
         } else {
           Button("Settings…") { perform(.openSettings) }
             .keyboardShortcut(",")
@@ -165,6 +161,19 @@ public struct MenuBarRoot: View {
     Text(value)
       .accessibilityLabel(value)
       .accessibilityAddTraits(.isStaticText)
+  }
+}
+
+@available(macOS 14.0, *)
+private struct ModernSettingsButton: View {
+  @Environment(\.openSettings) private var openSettings
+
+  var body: some View {
+    Button("Settings…") {
+      openSettings()
+    }
+    .keyboardShortcut(",")
+    .accessibilityLabel("Open Displayora Settings")
   }
 }
 

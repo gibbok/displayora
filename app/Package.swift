@@ -78,6 +78,7 @@ let package = Package(
     .library(name: "DisplayoraCore", targets: ["DisplayoraCore"]),
     .library(name: "DisplayoraUI", targets: ["DisplayoraUI"]),
     .library(name: "DisplayoraComposition", targets: ["DisplayoraComposition"]),
+    .library(name: "DisplayoraSystem", targets: ["DisplayoraSystem"]),
     .executable(name: "Displayora", targets: ["Displayora"]),
     .executable(name: "DisplayoraFeatureTestHost", targets: ["DisplayoraFeatureTestHost"]),
   ],
@@ -99,9 +100,14 @@ let package = Package(
       dependencies: ["DisplayoraUI"],
       swiftSettings: strictSwiftSettings
     ),
+    .target(
+      name: "DisplayoraSystem",
+      dependencies: ["DisplayoraCore"],
+      swiftSettings: strictSwiftSettings
+    ),
     .executableTarget(
       name: "Displayora",
-      dependencies: ["DisplayoraComposition", "DisplayoraUI"],
+      dependencies: ["DisplayoraComposition", "DisplayoraSystem", "DisplayoraUI"],
       swiftSettings: displayoraSwiftSettings
     ),
     .executableTarget(
@@ -126,19 +132,40 @@ let package = Package(
       swiftSettings: strictSwiftSettings
     ),
     .testTarget(
-      name: "DisplayoraCompositionTests",
-      dependencies: ["DisplayoraComposition", "DisplayoraCore", "DisplayoraUI", "DisplayoraTestSupport"],
+      name: "DisplayoraSystemTests",
+      dependencies: ["DisplayoraSystem", "DisplayoraTestSupport"],
       swiftSettings: strictSwiftSettings
+    ),
+    .testTarget(
+      name: "DisplayoraCompositionTests",
+      dependencies: [
+        "DisplayoraComposition",
+        "DisplayoraCore",
+        "DisplayoraUI",
+        "DisplayoraTestSupport",
+      ],
+      swiftSettings: strictSwiftSettings,
     ),
     .testTarget(
       name: "DisplayoraTests",
-      dependencies: ["Displayora", "DisplayoraCore", "DisplayoraUI", "DisplayoraTestSupport"],
-      swiftSettings: strictSwiftSettings
+      dependencies: [
+        "Displayora",
+        "DisplayoraCore",
+        "DisplayoraSystem",
+        "DisplayoraUI",
+        "DisplayoraTestSupport",
+      ],
+      swiftSettings: strictSwiftSettings,
     ),
     .testTarget(
       name: "DisplayoraFeatureTestHostTests",
-      dependencies: ["DisplayoraCore", "DisplayoraFeatureTestHost", "DisplayoraUI", "DisplayoraTestSupport"],
-      swiftSettings: strictSwiftSettings
+      dependencies: [
+        "DisplayoraCore",
+        "DisplayoraFeatureTestHost",
+        "DisplayoraUI",
+        "DisplayoraTestSupport",
+      ],
+      swiftSettings: strictSwiftSettings,
     ),
   ],
   swiftLanguageModes: [.v6]

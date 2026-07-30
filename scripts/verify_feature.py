@@ -34,13 +34,13 @@ def main() -> int:
     if scope not in PLATFORM_SCOPES | OPTIONAL_SCOPES:
         print(f"Unknown verification scope '{scope}'.", file=sys.stderr)
         return 2
-    if scope != "foundation":
+    if scope not in {"foundation", "shell"}:
         print(f"Verification scope '{scope}' is recognized but not yet implemented.", file=sys.stderr)
         return 2
 
     environment = os.environ.copy()
     environment["DISPLAYORA_FEATURES"] = ""
-    scratch = ROOT / "app" / ".build" / "feature-foundation"
+    scratch = ROOT / "app" / ".build" / f"feature-{scope}"
     flags = [
         "--package-path",
         "app",
@@ -52,13 +52,17 @@ def main() -> int:
         "-strict-concurrency=complete",
     ]
     run(["swift", "build", *flags, "--product", "DisplayoraFeatureTestHost"], environment)
-    for target in [
+    targets = [
         "DisplayoraCoreTests",
         "DisplayoraUITests",
+        "DisplayoraSystemTests",
         "DisplayoraCompositionTests",
         "DisplayoraTests",
         "DisplayoraFeatureTestHostTests",
-    ]:
+    ]
+    if scope == "foundation":
+        targets.remove("DisplayoraSystemTests")
+    for target in targets:
         run(["swift", "test", *flags, "--filter", target], environment)
 
     bin_result = subprocess.run(
@@ -82,7 +86,7 @@ def main() -> int:
         return 1
 
     run(["python3", "scripts/check_architecture.py"], environment)
-    print("Foundation feature scope verification passed.")
+    print(f"{scope.capitalize()} feature scope verification passed.")
     return 0
 
 

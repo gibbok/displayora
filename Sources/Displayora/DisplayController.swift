@@ -97,7 +97,7 @@ final class DisplayController {
       throw DisplayControllerError.invalidBrightnessPercentage
     }
 
-    // Re-read immediately before sending I²C so a stale menu cannot address a
+    // Re-read immediately before changing brightness so a stale menu cannot address a
     // display that was disconnected or disabled while the menu was open.
     guard try backend.activeDisplayIDs().contains(id) else {
       throw DisplayControllerError.displayNotActive(id)

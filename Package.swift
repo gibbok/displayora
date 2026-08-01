@@ -6,10 +6,7 @@ let package = Package(
   name: "Displayora",
   platforms: [.macOS(.v13)],
   targets: [
-    .executableTarget(
-      name: "Displayora",
-      linkerSettings: [.linkedFramework("IOKit")]
-    ),
+    .executableTarget(name: "Displayora"),
     .testTarget(name: "DisplayoraTests", dependencies: ["Displayora"]),
   ]
 )

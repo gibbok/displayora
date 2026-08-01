@@ -79,7 +79,7 @@ struct DisplayControllerTests {
     #expect(try controller.displays().map(\.isActive) == [true, true])
   }
 
-  @Test("Displays expose independent hardware brightness")
+  @Test("Displays expose independent software brightness")
   func displaysExposeIndependentBrightness() throws {
     let backend = FakeDisplayBackend(
       online: [10, 20], active: [10, 20], names: [:], brightness: [10: 35, 20: 80])
@@ -136,6 +136,15 @@ struct DisplayControllerTests {
       try controller.setBrightnessPercentage(55, for: 10)
     }
     #expect(backend.brightnessCalls.isEmpty)
+  }
+
+  @Test(
+    "Brightness percentage converts to overlay opacity",
+    arguments: [(100, 0.0), (55, 0.45), (5, 0.95)]
+  )
+  func brightnessConvertsToOverlayOpacity(percentage: Int, expectedOpacity: Double) {
+    let opacity = Double(SoftwareBrightness.overlayOpacity(for: percentage))
+    #expect(abs(opacity - expectedOpacity) < 0.000_001)
   }
 }
 

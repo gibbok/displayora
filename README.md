@@ -1,3 +1,6 @@
 # Displayora
 
-**Your displays, made simple.**
+```sh
+make run
+make test
+```

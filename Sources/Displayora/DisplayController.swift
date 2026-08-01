@@ -29,7 +29,7 @@ enum DisplayControllerError: LocalizedError, Equatable {
     case .lastActiveDisplay:
       return "Displayora cannot disable the only active display."
     case .invalidBrightnessPercentage:
-      return "Brightness must be between 5% and 100% in 5% steps."
+      return "Brightness must be between 10% and 100% in 5% steps."
     }
   }
 }
@@ -93,7 +93,7 @@ final class DisplayController {
   func setBrightnessPercentage(_ percentage: Int, for id: CGDirectDisplayID) throws
     -> [DisplayDescriptor]
   {
-    guard (5...100).contains(percentage), percentage.isMultiple(of: 5) else {
+    guard (10...100).contains(percentage), percentage.isMultiple(of: 5) else {
       throw DisplayControllerError.invalidBrightnessPercentage
     }
 

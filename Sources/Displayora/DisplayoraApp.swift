@@ -104,7 +104,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     let brightness = display.brightnessPercentage
     let slider = NSSlider(
-      value: Double(brightness ?? 5), minValue: 5, maxValue: 100, target: self,
+      value: Double(brightness ?? 10), minValue: 10, maxValue: 100, target: self,
       action: #selector(changeBrightness(_:)))
     slider.frame = NSRect(x: 14, y: 7, width: 225, height: 24)
     slider.numberOfTickMarks = 20

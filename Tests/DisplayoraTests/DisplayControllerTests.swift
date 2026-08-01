@@ -102,7 +102,7 @@ struct DisplayControllerTests {
 
   @Test(
     "Invalid brightness values are rejected",
-    arguments: [0, 4, 6, 101, 105]
+    arguments: [0, 5, 9, 11, 101, 105]
   )
   func invalidBrightnessIsRejected(percentage: Int) throws {
     let backend = FakeDisplayBackend(
@@ -140,7 +140,7 @@ struct DisplayControllerTests {
 
   @Test(
     "Brightness percentage converts to overlay opacity",
-    arguments: [(100, 0.0), (55, 0.45), (5, 0.95)]
+    arguments: [(100, 0.0), (55, 0.45), (10, 0.90)]
   )
   func brightnessConvertsToOverlayOpacity(percentage: Int, expectedOpacity: Double) {
     let opacity = Double(SoftwareBrightness.overlayOpacity(for: percentage))

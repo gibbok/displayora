@@ -5,6 +5,7 @@ struct DisplayDescriptor: Equatable {
   let id: CGDirectDisplayID
   let name: String
   let isActive: Bool
+  let brightnessPercentage: Int?
 }
 
 protocol DisplayBackend {
@@ -12,11 +13,14 @@ protocol DisplayBackend {
   func activeDisplayIDs() throws -> [CGDirectDisplayID]
   func localizedDisplayNames() -> [CGDirectDisplayID: String]
   func setDisplay(_ id: CGDirectDisplayID, enabled: Bool) throws
+  func brightnessPercentage(for id: CGDirectDisplayID) -> Int?
+  func setBrightnessPercentage(_ percentage: Int, for id: CGDirectDisplayID) throws
 }
 
 enum DisplayControllerError: LocalizedError, Equatable {
   case displayNotActive(CGDirectDisplayID)
   case lastActiveDisplay
+  case invalidBrightnessPercentage
 
   var errorDescription: String? {
     switch self {
@@ -24,6 +28,8 @@ enum DisplayControllerError: LocalizedError, Equatable {
       return "That display is no longer active."
     case .lastActiveDisplay:
       return "Displayora cannot disable the only active display."
+    case .invalidBrightnessPercentage:
+      return "Brightness must be between 5% and 100% in 5% steps."
     }
   }
 }
@@ -54,7 +60,8 @@ final class DisplayController {
       DisplayDescriptor(
         id: id,
         name: cachedNames[id] ?? "Display \(id)",
-        isActive: activeIDs.contains(id)
+        isActive: activeIDs.contains(id),
+        brightnessPercentage: activeIDs.contains(id) ? backend.brightnessPercentage(for: id) : nil
       )
     }
   }
@@ -79,6 +86,24 @@ final class DisplayController {
     } else {
       disabledByDisplayora.insert(id)
     }
+    return try displays()
+  }
+
+  @discardableResult
+  func setBrightnessPercentage(_ percentage: Int, for id: CGDirectDisplayID) throws
+    -> [DisplayDescriptor]
+  {
+    guard (5...100).contains(percentage), percentage.isMultiple(of: 5) else {
+      throw DisplayControllerError.invalidBrightnessPercentage
+    }
+
+    // Re-read immediately before sending I²C so a stale menu cannot address a
+    // display that was disconnected or disabled while the menu was open.
+    guard try backend.activeDisplayIDs().contains(id) else {
+      throw DisplayControllerError.displayNotActive(id)
+    }
+
+    try backend.setBrightnessPercentage(percentage, for: id)
     return try displays()
   }
 }

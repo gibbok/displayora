@@ -83,18 +83,18 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
   }
 
   private func displayRow(for display: DisplayDescriptor, canDisable: Bool) -> NSView {
-    let row = NSView(frame: NSRect(x: 0, y: 0, width: 290, height: 38))
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: 310, height: 68))
 
     let nameLabel = NSTextField(labelWithString: display.name)
     nameLabel.lineBreakMode = .byTruncatingTail
-    nameLabel.frame = NSRect(x: 14, y: 17, width: 190, height: 17)
+    nameLabel.frame = NSRect(x: 14, y: 47, width: 210, height: 17)
 
     let stateLabel = NSTextField(labelWithString: display.isActive ? "Active" : "Disabled")
     stateLabel.textColor = .secondaryLabelColor
     stateLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-    stateLabel.frame = NSRect(x: 14, y: 3, width: 190, height: 14)
+    stateLabel.frame = NSRect(x: 14, y: 33, width: 210, height: 14)
 
-    let toggle = NSSwitch(frame: NSRect(x: 225, y: 8, width: 50, height: 22))
+    let toggle = NSSwitch(frame: NSRect(x: 245, y: 40, width: 50, height: 22))
     toggle.state = display.isActive ? .on : .off
     toggle.isEnabled = canDisable
     toggle.identifier = NSUserInterfaceItemIdentifier(String(display.id))
@@ -102,10 +102,57 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     toggle.action = #selector(toggleDisplay(_:))
     toggle.toolTip = canDisable ? nil : "The only active display cannot be disabled"
 
+    let brightness = display.brightnessPercentage
+    let slider = NSSlider(
+      value: Double(brightness ?? 5), minValue: 5, maxValue: 100, target: self,
+      action: #selector(changeBrightness(_:)))
+    slider.frame = NSRect(x: 14, y: 7, width: 225, height: 24)
+    slider.numberOfTickMarks = 20
+    slider.tickMarkPosition = .below
+    slider.allowsTickMarkValuesOnly = true
+    slider.altIncrementValue = 5
+    slider.isContinuous = false
+    slider.isEnabled = display.isActive && brightness != nil
+    slider.identifier = NSUserInterfaceItemIdentifier(String(display.id))
+
+    let brightnessLabel: NSTextField
+    if !display.isActive {
+      brightnessLabel = NSTextField(labelWithString: "Disabled")
+    } else if let brightness {
+      brightnessLabel = NSTextField(labelWithString: "\(brightness)%")
+    } else {
+      brightnessLabel = NSTextField(labelWithString: "Unavailable")
+    }
+    brightnessLabel.alignment = .right
+    brightnessLabel.textColor = .secondaryLabelColor
+    brightnessLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+    brightnessLabel.frame = NSRect(x: 239, y: 9, width: 57, height: 17)
+
     row.addSubview(nameLabel)
     row.addSubview(stateLabel)
     row.addSubview(toggle)
+    row.addSubview(slider)
+    row.addSubview(brightnessLabel)
     return row
+  }
+
+  @objc private func changeBrightness(_ sender: NSSlider) {
+    guard
+      let value = sender.identifier?.rawValue,
+      let id = CGDirectDisplayID(value)
+    else {
+      refreshMenu()
+      return
+    }
+
+    do {
+      let percentage = Int(sender.doubleValue.rounded() / 5) * 5
+      let displays = try displayController.setBrightnessPercentage(percentage, for: id)
+      rebuildMenu(with: displays)
+    } catch {
+      refreshMenu()
+      report(error)
+    }
   }
 
   @objc private func toggleDisplay(_ sender: NSSwitch) {

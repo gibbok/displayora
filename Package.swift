@@ -3,10 +3,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "Displayora",
-    platforms: [.macOS(.v13)],
-    targets: [
-        .executableTarget(name: "Displayora"),
-        .testTarget(name: "DisplayoraTests", dependencies: ["Displayora"]),
-    ]
+  name: "Displayora",
+  platforms: [.macOS(.v13)],
+  targets: [
+    .executableTarget(
+      name: "Displayora",
+      linkerSettings: [.linkedFramework("IOKit")]
+    ),
+    .testTarget(name: "DisplayoraTests", dependencies: ["Displayora"]),
+  ]
 )

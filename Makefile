@@ -5,9 +5,13 @@ SWIFTPM_MODULECACHE_OVERRIDE := $(CURDIR)/.build/swift-module-cache
 DEVELOPER_PATH := $(shell xcode-select -p)
 TEST_FRAMEWORKS := $(DEVELOPER_PATH)/Library/Developer/Frameworks
 
-.PHONY: run test clean stop
+.PHONY: run rebuild test clean stop
 
-run: stop clean
+run: stop
+
+	CLANG_MODULE_CACHE_PATH=$(CLANG_MODULE_CACHE_PATH) SWIFTPM_MODULECACHE_OVERRIDE=$(SWIFTPM_MODULECACHE_OVERRIDE) swift run --triple $(TARGET_TRIPLE) $(APP)
+
+rebuild: stop clean
 
 	CLANG_MODULE_CACHE_PATH=$(CLANG_MODULE_CACHE_PATH) SWIFTPM_MODULECACHE_OVERRIDE=$(SWIFTPM_MODULECACHE_OVERRIDE) swift run --triple $(TARGET_TRIPLE) $(APP)
 

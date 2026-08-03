@@ -128,6 +128,14 @@ enum SoftwareBrightness {
   static func overlayOpacity(for percentage: Int) -> CGFloat {
     1 - CGFloat(percentage) / 100
   }
+
+  static func overlayColor(for percentage: Int, nightMode: NightMode) -> NSColor {
+    guard nightMode == .warm else { return .black }
+
+    let clampedPercentage = min(max(percentage, 0), 100)
+    let darkness = 1 - CGFloat(clampedPercentage) / 100
+    return NSColor.systemOrange.blended(withFraction: darkness, of: .black) ?? .black
+  }
 }
 
 @MainActor
@@ -195,7 +203,8 @@ private final class SoftwareBrightnessController: NSObject {
   }
 
   private func updateOverlay(for displayID: CGDirectDisplayID, on screen: NSScreen?) {
-    let opacity = SoftwareBrightness.overlayOpacity(for: percentage(for: displayID))
+    let percentage = percentage(for: displayID)
+    let opacity = SoftwareBrightness.overlayOpacity(for: percentage)
     guard opacity > 0, let screen else {
       removeOverlay(for: displayID)
       return
@@ -203,7 +212,8 @@ private final class SoftwareBrightnessController: NSObject {
 
     let window = overlays[displayID] ?? makeOverlayWindow()
     overlays[displayID] = window
-    window.backgroundColor = overlayColor
+    window.backgroundColor = SoftwareBrightness.overlayColor(
+      for: percentage, nightMode: nightMode)
     window.setFrame(screen.frame, display: true)
     window.alphaValue = opacity
     window.orderFrontRegardless()
@@ -223,13 +233,6 @@ private final class SoftwareBrightnessController: NSObject {
       .canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle,
     ]
     return window
-  }
-
-  private var overlayColor: NSColor {
-    switch nightMode {
-    case .none: .black
-    case .warm: .systemOrange
-    }
   }
 
   private func removeOverlay(for displayID: CGDirectDisplayID) {

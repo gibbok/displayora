@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Testing
 
@@ -169,6 +170,19 @@ struct DisplayControllerTests {
   func brightnessConvertsToOverlayOpacity(percentage: Int, expectedOpacity: Double) {
     let opacity = Double(SoftwareBrightness.overlayOpacity(for: percentage))
     #expect(abs(opacity - expectedOpacity) < 0.000_001)
+  }
+
+  @Test("Warm overlay color darkens as brightness decreases")
+  func warmOverlayColorDarkensWithBrightness() throws {
+    let lowBrightnessColor = try #require(
+      SoftwareBrightness.overlayColor(for: 10, nightMode: .warm)
+        .usingColorSpace(.deviceRGB))
+    let highBrightnessColor = try #require(
+      SoftwareBrightness.overlayColor(for: 80, nightMode: .warm)
+        .usingColorSpace(.deviceRGB))
+
+    #expect(lowBrightnessColor.brightnessComponent < highBrightnessColor.brightnessComponent)
+    #expect(lowBrightnessColor.brightnessComponent < 0.2)
   }
 }
 

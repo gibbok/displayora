@@ -8,6 +8,18 @@ struct DisplayDescriptor: Equatable {
   let brightnessPercentage: Int?
 }
 
+enum NightMode: CaseIterable, Equatable {
+  case none
+  case warm
+
+  var title: String {
+    switch self {
+    case .none: "None"
+    case .warm: "Warm"
+    }
+  }
+}
+
 protocol DisplayBackend {
   func onlineDisplayIDs() throws -> [CGDirectDisplayID]
   func activeDisplayIDs() throws -> [CGDirectDisplayID]
@@ -15,6 +27,7 @@ protocol DisplayBackend {
   func setDisplay(_ id: CGDirectDisplayID, enabled: Bool) throws
   func brightnessPercentage(for id: CGDirectDisplayID) -> Int?
   func setBrightnessPercentage(_ percentage: Int, for id: CGDirectDisplayID) throws
+  func setNightMode(_ mode: NightMode) throws
 }
 
 enum DisplayControllerError: LocalizedError, Equatable {
@@ -38,6 +51,7 @@ final class DisplayController {
   private let backend: DisplayBackend
   private var cachedNames: [CGDirectDisplayID: String] = [:]
   private var disabledByDisplayora: Set<CGDirectDisplayID> = []
+  private(set) var nightMode: NightMode = .none
 
   init(backend: DisplayBackend) {
     self.backend = backend
@@ -105,5 +119,10 @@ final class DisplayController {
 
     try backend.setBrightnessPercentage(percentage, for: id)
     return try displays()
+  }
+
+  func setNightMode(_ mode: NightMode) throws {
+    try backend.setNightMode(mode)
+    nightMode = mode
   }
 }

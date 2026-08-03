@@ -98,6 +98,13 @@ struct CoreGraphicsDisplayBackend: DisplayBackend {
     }
   }
 
+  func setNightMode(_ mode: NightMode) throws {
+    _ = try activeDisplayIDs()
+    MainActor.assumeIsolated {
+      softwareBrightness.setNightMode(mode)
+    }
+  }
+
   private func displayIDs(
     returnedBy function: (
       _ maxDisplays: UInt32, _ displays: UnsafeMutablePointer<CGDirectDisplayID>?,
@@ -127,6 +134,8 @@ enum SoftwareBrightness {
 private final class SoftwareBrightnessController: NSObject {
   private var percentages: [CGDirectDisplayID: Int] = [:]
   private var overlays: [CGDirectDisplayID: NSWindow] = [:]
+  private var activeDisplayIDs: Set<CGDirectDisplayID> = []
+  private var nightMode: NightMode = .none
 
   override init() {
     super.init()
@@ -151,12 +160,20 @@ private final class SoftwareBrightnessController: NSObject {
     updateOverlay(for: displayID, on: screen(for: displayID))
   }
 
+  func setNightMode(_ mode: NightMode) {
+    nightMode = mode
+    for displayID in activeDisplayIDs {
+      updateOverlay(for: displayID, on: screen(for: displayID))
+    }
+  }
+
   func reconcile(activeDisplayIDs: Set<CGDirectDisplayID>) {
+    self.activeDisplayIDs = activeDisplayIDs
     for displayID in Array(overlays.keys) where !activeDisplayIDs.contains(displayID) {
       removeOverlay(for: displayID)
     }
 
-    for displayID in percentages.keys where activeDisplayIDs.contains(displayID) {
+    for displayID in activeDisplayIDs {
       updateOverlay(for: displayID, on: screen(for: displayID))
     }
   }
@@ -168,7 +185,7 @@ private final class SoftwareBrightnessController: NSObject {
       })
     reconcile(activeDisplayIDs: Set(screensByID.keys))
 
-    for (displayID, screen) in screensByID where percentages[displayID] != nil {
+    for (displayID, screen) in screensByID {
       updateOverlay(for: displayID, on: screen)
     }
   }
@@ -186,6 +203,7 @@ private final class SoftwareBrightnessController: NSObject {
 
     let window = overlays[displayID] ?? makeOverlayWindow()
     overlays[displayID] = window
+    window.backgroundColor = overlayColor
     window.setFrame(screen.frame, display: true)
     window.alphaValue = opacity
     window.orderFrontRegardless()
@@ -197,7 +215,6 @@ private final class SoftwareBrightnessController: NSObject {
       styleMask: .borderless,
       backing: .buffered,
       defer: false)
-    window.backgroundColor = .black
     window.isOpaque = false
     window.hasShadow = false
     window.ignoresMouseEvents = true
@@ -206,6 +223,13 @@ private final class SoftwareBrightnessController: NSObject {
       .canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle,
     ]
     return window
+  }
+
+  private var overlayColor: NSColor {
+    switch nightMode {
+    case .none: .black
+    case .warm: .systemOrange
+    }
   }
 
   private func removeOverlay(for displayID: CGDirectDisplayID) {

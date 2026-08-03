@@ -2,12 +2,15 @@ import AppKit
 
 @main
 @MainActor
-final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTextFieldDelegate {
   private let displayController = DisplayController(backend: CoreGraphicsDisplayBackend())
   private let menu = NSMenu()
   private var statusItem: NSStatusItem?
   private var screenChangeObserver: NSObjectProtocol?
   private var expandedActionsSettingsID: UUID?
+  private var editingSavedSettingsID: UUID?
+  private var focusSavedSettingsID: UUID?
+  private var confirmingDeleteSettingsID: UUID?
 
   static func main() {
     let application = NSApplication.shared
@@ -53,6 +56,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   func menuDidClose(_ menu: NSMenu) {
     expandedActionsSettingsID = nil
+    confirmingDeleteSettingsID = nil
   }
 
   private func refreshMenu() {
@@ -141,6 +145,23 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     quitItem.target = self
     menu.addItem(quitItem)
 
+    if let focusSavedSettingsID {
+      self.focusSavedSettingsID = nil
+      DispatchQueue.main.async { [weak self] in
+        guard let self else { return }
+        let identifier = NSUserInterfaceItemIdentifier(focusSavedSettingsID.uuidString)
+        for item in self.menu.items {
+          if let field = item.view?.subviews.compactMap({ $0 as? InlineNameField })
+            .first(where: { $0.identifier == identifier })
+          {
+            field.window?.makeFirstResponder(field)
+            field.currentEditor()?.selectedRange = NSRange(
+              location: 0, length: field.stringValue.count)
+            break
+          }
+        }
+      }
+    }
   }
 
   private func noSavedSettingsRow() -> NSView {
@@ -196,19 +217,36 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     row.addSubview(state)
 
     let nameWidth: CGFloat = isModified ? 135 : (compatibility.isAvailable ? 285 : 140)
-    let name = NSButton(
-      title: setting.name, target: self, action: #selector(applySavedSettings(_:)))
-    name.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
-    name.bezelStyle = .inline
-    name.isBordered = false
-    name.alignment = .left
-    name.lineBreakMode = .byTruncatingTail
-    name.frame = NSRect(x: 28, y: 5, width: nameWidth, height: 24)
-    name.toolTip =
-      compatibility.isAvailable
-      ? "Apply \(setting.name)"
-      : "Show why \(setting.name) is unavailable"
-    row.addSubview(name)
+    if editingSavedSettingsID == setting.id {
+      let name = InlineNameField(frame: NSRect(x: 28, y: 5, width: nameWidth, height: 24))
+      name.stringValue = setting.name
+      name.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
+      name.isBordered = false
+      name.drawsBackground = false
+      name.focusRingType = .none
+      name.delegate = self
+      name.target = self
+      name.action = #selector(commitRename(_:))
+      name.onCancel = { [weak self] in
+        self?.editingSavedSettingsID = nil
+        self?.refreshMenu()
+      }
+      row.addSubview(name)
+    } else {
+      let name = NSButton(
+        title: setting.name, target: self, action: #selector(applySavedSettings(_:)))
+      name.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
+      name.bezelStyle = .inline
+      name.isBordered = false
+      name.alignment = .left
+      name.lineBreakMode = .byTruncatingTail
+      name.frame = NSRect(x: 28, y: 5, width: nameWidth, height: 24)
+      name.toolTip =
+        compatibility.isAvailable
+        ? "Apply \(setting.name)"
+        : "Show why \(setting.name) is unavailable"
+      row.addSubview(name)
+    }
 
     if isModified || !compatibility.isAvailable {
       let status = NSTextField(labelWithString: isModified ? "Modified" : "Unavailable")
@@ -236,12 +274,27 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   private func savedSettingsActionsRow(for setting: SavedSettings) -> NSView {
     let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 36))
+    if confirmingDeleteSettingsID == setting.id {
+      let question = NSTextField(labelWithString: "Delete “\(setting.name)”?")
+      question.lineBreakMode = .byTruncatingTail
+      question.frame = NSRect(x: 28, y: 10, width: 180, height: 17)
+      row.addSubview(question)
+      row.addSubview(
+        profileButton(
+          title: "Cancel", x: 218, width: 72, action: #selector(cancelDelete), id: setting.id))
+      let delete = profileButton(
+        title: "Delete", x: 296, width: 78, action: #selector(confirmDelete(_:)), id: setting.id)
+      delete.contentTintColor = .systemRed
+      row.addSubview(delete)
+      return row
+    }
+
     row.addSubview(
       profileButton(
         title: "Rename…", x: 28, width: 90, action: #selector(renameSavedSettings(_:)),
         id: setting.id))
     let delete = profileButton(
-      title: "Delete…", x: 124, width: 86, action: #selector(deleteSavedSettings(_:)),
+      title: "Delete…", x: 124, width: 86, action: #selector(beginDelete(_:)),
       id: setting.id)
     delete.contentTintColor = .systemRed
     row.addSubview(delete)
@@ -419,22 +472,33 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   @objc private func showSavedSettingsActions(_ sender: NSButton) {
     guard let id = sender.savedSettingsID else { return }
+    confirmingDeleteSettingsID = nil
     expandedActionsSettingsID = expandedActionsSettingsID == id ? nil : id
     refreshMenu()
   }
 
   @objc private func hideSavedSettingsActions() {
     expandedActionsSettingsID = nil
+    confirmingDeleteSettingsID = nil
     refreshMenu()
   }
 
   @objc private func renameSavedSettings(_ sender: NSButton) {
-    guard let id = sender.savedSettingsID,
-      let setting = displayController.savedSettings.first(where: { $0.id == id }),
-      let name = promptForName(
-        title: "Rename Setup", message: "Enter a new name for this setup.",
-        defaultName: setting.name, actionTitle: "Rename")
-    else { return }
+    guard let id = sender.savedSettingsID else { return }
+    expandedActionsSettingsID = nil
+    editingSavedSettingsID = id
+    focusSavedSettingsID = id
+    refreshMenu()
+  }
+
+  @objc private func commitRename(_ sender: NSTextField) {
+    guard let id = sender.savedSettingsID else { return }
+    let name = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    editingSavedSettingsID = nil
+    guard !name.isEmpty else {
+      refreshMenu()
+      return
+    }
     do {
       try displayController.renameSavedSettings(id: id, to: name)
       refreshMenu()
@@ -444,44 +508,36 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
   }
 
-  @objc private func deleteSavedSettings(_ sender: NSButton) {
-    guard let id = sender.savedSettingsID,
-      let setting = displayController.savedSettings.first(where: { $0.id == id })
+  func controlTextDidEndEditing(_ notification: Notification) {
+    guard let field = notification.object as? NSTextField,
+      let id = field.savedSettingsID,
+      editingSavedSettingsID == id
     else { return }
-    NSApplication.shared.activate(ignoringOtherApps: true)
-    let alert = NSAlert()
-    alert.messageText = "Delete “\(setting.name)”?"
-    alert.informativeText =
-      "This saved setup cannot be recovered. Your current displays will not change."
-    alert.alertStyle = .warning
-    alert.addButton(withTitle: "Delete")
-    alert.addButton(withTitle: "Cancel")
-    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    commitRename(field)
+  }
+
+  @objc private func beginDelete(_ sender: NSButton) {
+    guard let id = sender.savedSettingsID else { return }
+    confirmingDeleteSettingsID = id
+    refreshMenu()
+  }
+
+  @objc private func cancelDelete() {
+    confirmingDeleteSettingsID = nil
+    refreshMenu()
+  }
+
+  @objc private func confirmDelete(_ sender: NSButton) {
+    guard let id = sender.savedSettingsID else { return }
     do {
       try displayController.deleteSavedSettings(id: id)
+      confirmingDeleteSettingsID = nil
+      expandedActionsSettingsID = nil
       refreshMenu()
     } catch {
       refreshMenu()
       report(error)
     }
-  }
-
-  private func promptForName(
-    title: String, message: String, defaultName: String, actionTitle: String = "Save"
-  ) -> String? {
-    NSApplication.shared.activate(ignoringOtherApps: true)
-    let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 24))
-    field.stringValue = defaultName
-    let alert = NSAlert()
-    alert.messageText = title
-    alert.informativeText = message
-    alert.accessoryView = field
-    alert.addButton(withTitle: actionTitle)
-    alert.addButton(withTitle: "Cancel")
-    alert.window.initialFirstResponder = field
-    guard alert.runModal() == .alertFirstButtonReturn else { return nil }
-    let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-    return name.isEmpty ? defaultName : name
   }
 
   private func report(_ error: Error) {
@@ -493,6 +549,15 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   @objc private func quit() {
     NSApplication.shared.terminate(nil)
+  }
+}
+
+@MainActor
+private final class InlineNameField: NSTextField {
+  var onCancel: (() -> Void)?
+
+  override func cancelOperation(_ sender: Any?) {
+    onCancel?()
   }
 }
 

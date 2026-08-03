@@ -213,6 +213,22 @@ final class DisplayController {
   }
 
   @discardableResult
+  func resetDisplays() throws -> [DisplayDescriptor] {
+    let currentDisplays = try displays()
+    guard !currentDisplays.isEmpty else { return [] }
+    try backend.setDisplaysEnabled(
+      Dictionary(uniqueKeysWithValues: currentDisplays.map { ($0.id, true) }))
+    disabledByDisplayora.removeAll()
+    for display in currentDisplays {
+      try backend.setBrightnessPercentage(100, for: display.id)
+      rememberedBrightness[display.displayUUID] = 100
+    }
+    let result = try displays()
+    try refreshModificationState(after: result)
+    return result
+  }
+
+  @discardableResult
   func createSavedSettings(named name: String? = nil) throws -> SavedSettings {
     let displays = try displays()
     let configuration = try captureConfiguration(from: displays)

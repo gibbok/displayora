@@ -81,6 +81,21 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       }
     }
 
+    let resetItem = NSMenuItem()
+    let resetButton = NSButton(
+      title: "Reset Displays", target: self, action: #selector(resetDisplays))
+    resetButton.image = NSImage(
+      systemSymbolName: "arrow.counterclockwise", accessibilityDescription: "Reset")
+    resetButton.imagePosition = .imageLeading
+    resetButton.bezelStyle = .rounded
+    resetButton.frame = NSRect(x: 12, y: 5, width: 366, height: 30)
+    resetButton.isEnabled = !displays.isEmpty
+    resetButton.toolTip = "Enable all displays and set every brightness to 100%"
+    let resetView = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 40))
+    resetView.addSubview(resetButton)
+    resetItem.view = resetView
+    menu.addItem(resetItem)
+
     let nightModeItem = NSMenuItem(title: "Night mode", action: nil, keyEquivalent: "")
     let nightModeMenu = NSMenu(title: "Night mode")
     for (index, mode) in NightMode.allCases.enumerated() {
@@ -341,6 +356,16 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     do {
       try displayController.setNightMode(NightMode.allCases[sender.tag])
       refreshMenu()
+    } catch {
+      refreshMenu()
+      report(error)
+    }
+  }
+
+  @objc private func resetDisplays() {
+    do {
+      let displays = try displayController.resetDisplays()
+      rebuildMenu(with: displays)
     } catch {
       refreshMenu()
       report(error)

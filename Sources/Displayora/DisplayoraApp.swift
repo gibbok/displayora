@@ -108,10 +108,8 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
     saveItem.view = saveView
     menu.addItem(saveItem)
 
-    let scratchItem = NSMenuItem(
-      title: "No Saved Settings", action: #selector(selectNoSavedSettings), keyEquivalent: "")
-    scratchItem.target = self
-    scratchItem.state = displayController.activeSavedSettingsID == nil ? .on : .off
+    let scratchItem = NSMenuItem()
+    scratchItem.view = noSavedSettingsRow()
     menu.addItem(scratchItem)
 
     for setting in displayController.savedSettings {
@@ -142,6 +140,25 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
         }
       }
     }
+  }
+
+  private func noSavedSettingsRow() -> NSView {
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 30))
+    if displayController.activeSavedSettingsID == nil {
+      let checkmark = NSImageView(frame: NSRect(x: 10, y: 7, width: 16, height: 16))
+      checkmark.image = NSImage(
+        systemSymbolName: "checkmark", accessibilityDescription: "Selected")
+      row.addSubview(checkmark)
+    }
+
+    let button = NSButton(
+      title: "No Saved Settings", target: self, action: #selector(selectNoSavedSettings))
+    button.bezelStyle = .inline
+    button.isBordered = false
+    button.alignment = .left
+    button.frame = NSRect(x: 28, y: 3, width: 190, height: 24)
+    row.addSubview(button)
+    return row
   }
 
   private func savedSettingsRow(for setting: SavedSettings, displays: [DisplayDescriptor]) -> NSView
@@ -175,34 +192,41 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
       return row
     }
 
+    let nameWidth: CGFloat = compatibility.isAvailable ? 190 : 125
+    let name = ProfileNameField(frame: NSRect(x: 28, y: 5, width: nameWidth, height: 24))
+    name.stringValue = setting.name
+    name.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
+    name.isBordered = false
+    name.drawsBackground = false
+    name.focusRingType = .none
+    name.font = .systemFont(ofSize: NSFont.systemFontSize)
+
     if editingSavedSettingsID == setting.id {
-      let field = ProfileNameField(frame: NSRect(x: 32, y: 5, width: 180, height: 23))
-      field.stringValue = setting.name
-      field.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
-      field.delegate = self
-      field.target = self
-      field.action = #selector(commitRename(_:))
-      field.onCancel = { [weak self] in
+      name.isEditable = true
+      name.isSelectable = true
+      name.delegate = self
+      name.target = self
+      name.action = #selector(commitRename(_:))
+      name.onCancel = { [weak self] in
         self?.editingSavedSettingsID = nil
         self?.refreshMenu()
       }
-      row.addSubview(field)
     } else {
-      let name = NSButton(title: setting.name, target: self, action: #selector(beginRename(_:)))
-      name.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
-      name.bezelStyle = .inline
-      name.isBordered = false
-      name.alignment = .left
+      name.isEditable = false
+      name.isSelectable = false
       name.lineBreakMode = .byTruncatingTail
-      name.frame = NSRect(x: 28, y: 5, width: compatibility.isAvailable ? 190 : 125, height: 24)
-      row.addSubview(name)
-      if !compatibility.isAvailable {
-        let status = NSTextField(labelWithString: "Unavailable")
-        status.textColor = .secondaryLabelColor
-        status.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        status.frame = NSRect(x: 155, y: 9, width: 65, height: 16)
-        row.addSubview(status)
+      name.onBeginEditing = { [weak self] in
+        self?.beginRename(id: setting.id)
       }
+    }
+    row.addSubview(name)
+
+    if !compatibility.isAvailable {
+      let status = NSTextField(labelWithString: "Unavailable")
+      status.textColor = .secondaryLabelColor
+      status.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+      status.frame = NSRect(x: 155, y: 9, width: 65, height: 16)
+      row.addSubview(status)
     }
 
     row.addSubview(
@@ -352,8 +376,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
     refreshMenu()
   }
 
-  @objc private func beginRename(_ sender: NSButton) {
-    guard let id = sender.savedSettingsID else { return }
+  private func beginRename(id: UUID) {
     editingSavedSettingsID = id
     confirmingDeleteID = nil
     focusSavedSettingsID = id
@@ -436,7 +459,16 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
 
 @MainActor
 private final class ProfileNameField: NSTextField {
+  var onBeginEditing: (() -> Void)?
   var onCancel: (() -> Void)?
+
+  override func mouseDown(with event: NSEvent) {
+    guard isEditable else {
+      onBeginEditing?()
+      return
+    }
+    super.mouseDown(with: event)
+  }
 
   override func cancelOperation(_ sender: Any?) {
     onCancel?()

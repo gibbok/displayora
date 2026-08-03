@@ -76,6 +76,19 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       }
     }
 
+    let nightModeItem = NSMenuItem(title: "Night mode", action: nil, keyEquivalent: "")
+    let nightModeMenu = NSMenu(title: "Night mode")
+    for (index, mode) in NightMode.allCases.enumerated() {
+      let modeItem = NSMenuItem(
+        title: mode.title, action: #selector(changeNightMode(_:)), keyEquivalent: "")
+      modeItem.target = self
+      modeItem.tag = index
+      modeItem.state = mode == displayController.nightMode ? .on : .off
+      nightModeMenu.addItem(modeItem)
+    }
+    nightModeItem.submenu = nightModeMenu
+    menu.addItem(nightModeItem)
+
     menu.addItem(.separator())
     let quitItem = NSMenuItem(title: "Quit Displayora", action: #selector(quit), keyEquivalent: "q")
     quitItem.target = self
@@ -167,6 +180,21 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     do {
       let displays = try displayController.setDisplay(id, enabled: sender.state == .on)
       rebuildMenu(with: displays)
+    } catch {
+      refreshMenu()
+      report(error)
+    }
+  }
+
+  @objc private func changeNightMode(_ sender: NSMenuItem) {
+    guard NightMode.allCases.indices.contains(sender.tag) else {
+      refreshMenu()
+      return
+    }
+
+    do {
+      try displayController.setNightMode(NightMode.allCases[sender.tag])
+      refreshMenu()
     } catch {
       refreshMenu()
       report(error)

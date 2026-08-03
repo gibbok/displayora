@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Testing
 
@@ -138,13 +139,50 @@ struct DisplayControllerTests {
     #expect(backend.brightnessCalls.isEmpty)
   }
 
+  @Test("Selecting Warm performs one global update for all active displays")
+  func selectingWarmPerformsOneGlobalUpdate() throws {
+    let backend = FakeDisplayBackend(online: [10, 20], active: [10, 20], names: [:])
+    let controller = DisplayController(backend: backend)
+
+    try controller.setNightMode(.warm)
+
+    #expect(backend.nightModeCalls == [.init(mode: .warm, activeDisplayIDs: [10, 20])])
+    #expect(controller.nightMode == .warm)
+  }
+
+  @Test("A night mode backend failure preserves the previous mode")
+  func nightModeFailurePreservesPreviousMode() throws {
+    let backend = FakeDisplayBackend(online: [10, 20], active: [10, 20], names: [:])
+    let controller = DisplayController(backend: backend)
+    try controller.setNightMode(.warm)
+    backend.nightModeError = FakeError.configurationFailed
+
+    #expect(throws: FakeError.configurationFailed) {
+      try controller.setNightMode(.none)
+    }
+    #expect(controller.nightMode == .warm)
+  }
+
   @Test(
     "Brightness percentage converts to overlay opacity",
-    arguments: [(100, 0.0), (55, 0.45), (10, 0.90)]
+    arguments: [(100, 0.0), (55, 0.45), (20, 0.80), (10, 0.90)]
   )
   func brightnessConvertsToOverlayOpacity(percentage: Int, expectedOpacity: Double) {
     let opacity = Double(SoftwareBrightness.overlayOpacity(for: percentage))
     #expect(abs(opacity - expectedOpacity) < 0.000_001)
+  }
+
+  @Test("Warm overlay color darkens as brightness decreases")
+  func warmOverlayColorDarkensWithBrightness() throws {
+    let lowBrightnessColor = try #require(
+      SoftwareBrightness.overlayColor(for: 10, nightMode: .warm)
+        .usingColorSpace(.deviceRGB))
+    let highBrightnessColor = try #require(
+      SoftwareBrightness.overlayColor(for: 80, nightMode: .warm)
+        .usingColorSpace(.deviceRGB))
+
+    #expect(lowBrightnessColor.brightnessComponent < highBrightnessColor.brightnessComponent)
+    #expect(lowBrightnessColor.brightnessComponent < 0.2)
   }
 }
 
@@ -163,14 +201,21 @@ private final class FakeDisplayBackend: DisplayBackend {
     let percentage: Int
   }
 
+  struct NightModeCall: Equatable {
+    let mode: NightMode
+    let activeDisplayIDs: [CGDirectDisplayID]
+  }
+
   var online: [CGDirectDisplayID]
   var active: [CGDirectDisplayID]
   var names: [CGDirectDisplayID: String]
   var brightness: [CGDirectDisplayID: Int]
   var configurationError: Error?
+  var nightModeError: Error?
   var removeDisabledDisplaysFromOnlineList = false
   private(set) var calls: [Call] = []
   private(set) var brightnessCalls: [BrightnessCall] = []
+  private(set) var nightModeCalls: [NightModeCall] = []
 
   init(
     online: [CGDirectDisplayID],
@@ -195,6 +240,11 @@ private final class FakeDisplayBackend: DisplayBackend {
   func setBrightnessPercentage(_ percentage: Int, for id: CGDirectDisplayID) throws {
     brightnessCalls.append(.init(id: id, percentage: percentage))
     brightness[id] = percentage
+  }
+
+  func setNightMode(_ mode: NightMode) throws {
+    if let nightModeError { throw nightModeError }
+    nightModeCalls.append(.init(mode: mode, activeDisplayIDs: active))
   }
 
   func setDisplay(_ id: CGDirectDisplayID, enabled: Bool) throws {

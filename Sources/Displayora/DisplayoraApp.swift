@@ -81,6 +81,19 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       }
     }
 
+    let nightModeItem = NSMenuItem(title: "Night mode", action: nil, keyEquivalent: "")
+    let nightModeMenu = NSMenu(title: "Night mode")
+    for (index, mode) in NightMode.allCases.enumerated() {
+      let modeItem = NSMenuItem(
+        title: mode.title, action: #selector(changeNightMode(_:)), keyEquivalent: "")
+      modeItem.target = self
+      modeItem.tag = index
+      modeItem.state = mode == displayController.nightMode ? .on : .off
+      nightModeMenu.addItem(modeItem)
+    }
+    nightModeItem.submenu = nightModeMenu
+    menu.addItem(nightModeItem)
+
     let resetItem = NSMenuItem()
     let resetButton = NSButton(
       title: "Reset Displays", target: self, action: #selector(resetDisplays))
@@ -95,19 +108,6 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     resetView.addSubview(resetButton)
     resetItem.view = resetView
     menu.addItem(resetItem)
-
-    let nightModeItem = NSMenuItem(title: "Night mode", action: nil, keyEquivalent: "")
-    let nightModeMenu = NSMenu(title: "Night mode")
-    for (index, mode) in NightMode.allCases.enumerated() {
-      let modeItem = NSMenuItem(
-        title: mode.title, action: #selector(changeNightMode(_:)), keyEquivalent: "")
-      modeItem.target = self
-      modeItem.tag = index
-      modeItem.state = mode == displayController.nightMode ? .on : .off
-      nightModeMenu.addItem(modeItem)
-    }
-    nightModeItem.submenu = nightModeMenu
-    menu.addItem(nightModeItem)
 
     menu.addItem(.separator())
     let savedSetupsHeading = NSMenuItem(

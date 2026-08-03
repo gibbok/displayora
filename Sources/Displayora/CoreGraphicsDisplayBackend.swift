@@ -138,8 +138,16 @@ struct CoreGraphicsDisplayBackend: DisplayBackend {
 }
 
 enum SoftwareBrightness {
+  private static let warmTintOpacity: CGFloat = 0.16
+
   static func overlayOpacity(for percentage: Int) -> CGFloat {
     1 - CGFloat(percentage) / 100
+  }
+
+  static func overlayOpacity(for percentage: Int, nightMode: NightMode) -> CGFloat {
+    let brightnessOpacity = overlayOpacity(for: percentage)
+    guard nightMode == .warm else { return brightnessOpacity }
+    return 1 - (1 - brightnessOpacity) * (1 - warmTintOpacity)
   }
 
   static func overlayColor(for percentage: Int, nightMode: NightMode) -> NSColor {
@@ -217,7 +225,7 @@ private final class SoftwareBrightnessController: NSObject {
 
   private func updateOverlay(for displayID: CGDirectDisplayID, on screen: NSScreen?) {
     let percentage = percentage(for: displayID)
-    let opacity = SoftwareBrightness.overlayOpacity(for: percentage)
+    let opacity = SoftwareBrightness.overlayOpacity(for: percentage, nightMode: nightMode)
     guard opacity > 0, let screen else {
       removeOverlay(for: displayID)
       return

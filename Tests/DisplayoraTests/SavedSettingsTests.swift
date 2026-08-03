@@ -20,6 +20,29 @@ struct SavedSettingsTests {
     #expect(defaults.data(forKey: UserDefaultsSavedSettingsStore.key) != nil)
   }
 
+  @Test("A new controller loads saved setups without applying or activating them")
+  func controllerReloadsSavedSettingsWithoutApplying() throws {
+    let store = MemorySavedSettingsStore()
+    let firstBackend = ProfileDisplayBackend(
+      online: [10], active: [10], brightness: [10: 55])
+    let firstController = DisplayController(
+      backend: firstBackend, savedSettingsStore: store)
+    try firstController.setNightMode(.warm)
+    let saved = try firstController.createSavedSettings(named: "Desk")
+
+    let relaunchedBackend = ProfileDisplayBackend(
+      online: [10], active: [10], brightness: [10: 100])
+    let relaunchedController = DisplayController(
+      backend: relaunchedBackend, savedSettingsStore: store)
+
+    #expect(relaunchedController.savedSettings == [saved])
+    #expect(relaunchedController.activeSavedSettingsID == nil)
+    #expect(relaunchedController.nightMode == .none)
+    #expect(relaunchedBackend.batchCalls.isEmpty)
+    #expect(relaunchedBackend.brightnessCalls.isEmpty)
+    #expect(relaunchedBackend.nightModeCalls.isEmpty)
+  }
+
   @Test("Saving captures stable identities, disabled brightness, and Night mode")
   func captureCompleteConfiguration() throws {
     let backend = ProfileDisplayBackend(
@@ -61,6 +84,12 @@ struct SavedSettingsTests {
     #expect(controller.savedSettings.map(\.name) == ["Travel", "Settings 1"])
     #expect(replacement.name == "Settings 1")
     #expect(store.settings == controller.savedSettings)
+
+    let relaunchedController = DisplayController(
+      backend: ProfileDisplayBackend(online: [10], active: [10]),
+      savedSettingsStore: store)
+    #expect(relaunchedController.savedSettings.map(\.name) == ["Travel", "Settings 1"])
+    #expect(relaunchedController.activeSavedSettingsID == nil)
   }
 
   @Test("Applying uses one batch update, restores brightness and Night mode, then activates")

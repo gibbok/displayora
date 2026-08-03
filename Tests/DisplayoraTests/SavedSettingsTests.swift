@@ -136,7 +136,7 @@ struct SavedSettingsTests {
     #expect(backend.batchCalls.isEmpty)
   }
 
-  @Test("Active edits auto-save, scratch edits do not")
+  @Test("Active edits remain modified until updated; Manual edits do not affect the setup")
   func activeAndScratchEdits() throws {
     let backend = ProfileDisplayBackend(
       online: [10], active: [10], brightness: [10: 50])
@@ -145,8 +145,14 @@ struct SavedSettingsTests {
     let setting = try controller.createSavedSettings()
 
     _ = try controller.setBrightnessPercentage(65, for: 10)
-    #expect(store.settings[0].configuration.monitors[0].brightnessPercentage == 65)
     try controller.setNightMode(.warm)
+    #expect(controller.activeSavedSettingsIsModified)
+    #expect(store.settings[0].configuration.monitors[0].brightnessPercentage == 50)
+    #expect(store.settings[0].configuration.nightMode == .none)
+
+    try controller.updateActiveSavedSettings()
+    #expect(!controller.activeSavedSettingsIsModified)
+    #expect(store.settings[0].configuration.monitors[0].brightnessPercentage == 65)
     #expect(store.settings[0].configuration.nightMode == .warm)
 
     controller.selectNoSavedSettings()
@@ -155,22 +161,25 @@ struct SavedSettingsTests {
     #expect(store.settings[0].configuration.monitors[0].brightnessPercentage == 65)
     #expect(store.settings[0].configuration.nightMode == .warm)
     #expect(controller.savedSettings.first?.id == setting.id)
+    #expect(controller.activeSavedSettingsID == nil)
   }
 
-  @Test("Persistence failure after a control change detaches and preserves the saved profile")
-  func autoSaveFailure() throws {
+  @Test("A failed explicit update preserves the active setup and its saved snapshot")
+  func updateFailure() throws {
     let backend = ProfileDisplayBackend(
       online: [10], active: [10], brightness: [10: 50])
     let store = MemorySavedSettingsStore()
     let controller = DisplayController(backend: backend, savedSettingsStore: store)
     let original = try controller.createSavedSettings()
+    _ = try controller.setBrightnessPercentage(70, for: 10)
     store.failSaves = true
 
     #expect(throws: DisplayControllerError.savedSettingsUpdateFailed) {
-      try controller.setBrightnessPercentage(70, for: 10)
+      try controller.updateActiveSavedSettings()
     }
     #expect(backend.brightness[10] == 70)
-    #expect(controller.activeSavedSettingsID == nil)
+    #expect(controller.activeSavedSettingsID == original.id)
+    #expect(controller.activeSavedSettingsIsModified)
     #expect(controller.savedSettings == [original])
     #expect(store.settings == [original])
   }

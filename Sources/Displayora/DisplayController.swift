@@ -100,8 +100,7 @@ enum DisplayControllerError: LocalizedError, Equatable {
       }
       return "These saved settings cannot be applied. " + parts.joined(separator: " ")
     case .savedSettingsUpdateFailed:
-      return
-        "The display changed, but the active saved settings could not be updated. Displayora switched to No Saved Settings."
+      return "The current changes could not be saved. The saved setup was left unchanged."
     }
   }
 }
@@ -115,6 +114,7 @@ final class DisplayController {
   private(set) var nightMode: NightMode = .none
   private(set) var savedSettings: [SavedSettings]
   private(set) var activeSavedSettingsID: UUID?
+  private(set) var activeSavedSettingsIsModified = false
 
   init(
     backend: DisplayBackend,
@@ -175,24 +175,15 @@ final class DisplayController {
     {
       rememberedBrightness[uuid] = brightness
     }
-    let wasUsingSavedSettings = activeSavedSettingsID != nil
     try backend.setDisplaysEnabled([id: enabled])
     if enabled {
       disabledByDisplayora.remove(id)
     } else {
       disabledByDisplayora.insert(id)
     }
-    do {
-      let result = try displays()
-      try autoSaveActiveSettings(after: result)
-      return result
-    } catch {
-      if wasUsingSavedSettings {
-        activeSavedSettingsID = nil
-        throw DisplayControllerError.savedSettingsUpdateFailed
-      }
-      throw error
-    }
+    let result = try displays()
+    try refreshModificationState(after: result)
+    return result
   }
 
   @discardableResult
@@ -209,47 +200,58 @@ final class DisplayController {
       throw DisplayControllerError.displayNotActive(id)
     }
 
-    let wasUsingSavedSettings = activeSavedSettingsID != nil
     try backend.setBrightnessPercentage(percentage, for: id)
-    do {
-      let result = try displays()
-      try autoSaveActiveSettings(after: result)
-      return result
-    } catch {
-      if wasUsingSavedSettings {
-        activeSavedSettingsID = nil
-        throw DisplayControllerError.savedSettingsUpdateFailed
-      }
-      throw error
-    }
+    let result = try displays()
+    try refreshModificationState(after: result)
+    return result
   }
 
   func setNightMode(_ mode: NightMode) throws {
-    let wasUsingSavedSettings = activeSavedSettingsID != nil
     try backend.setNightMode(mode)
     nightMode = mode
-    do {
-      try autoSaveActiveSettings(after: displays())
-    } catch {
-      if wasUsingSavedSettings {
-        activeSavedSettingsID = nil
-        throw DisplayControllerError.savedSettingsUpdateFailed
-      }
-      throw error
-    }
+    try refreshModificationState(after: displays())
   }
 
   @discardableResult
-  func createSavedSettings() throws -> SavedSettings {
+  func createSavedSettings(named name: String? = nil) throws -> SavedSettings {
     let displays = try displays()
     let configuration = try captureConfiguration(from: displays)
-    let setting = SavedSettings(name: nextDefaultName(), configuration: configuration)
+    let trimmedName = name?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let settingName = trimmedName.flatMap { $0.isEmpty ? nil : $0 } ?? nextDefaultName()
+    let setting = SavedSettings(name: settingName, configuration: configuration)
     var updated = savedSettings
     updated.append(setting)
     try savedSettingsStore.save(updated)
     savedSettings = updated
     activeSavedSettingsID = setting.id
+    activeSavedSettingsIsModified = false
     return setting
+  }
+
+  func suggestedSavedSettingsName() -> String {
+    nextDefaultName()
+  }
+
+  func updateActiveSavedSettings() throws {
+    guard let activeSavedSettingsID,
+      let index = savedSettings.firstIndex(where: { $0.id == activeSavedSettingsID })
+    else { throw DisplayControllerError.savedSettingsNotFound }
+    let currentDisplays = try displays()
+    let compatibility = compatibility(of: savedSettings[index], with: currentDisplays)
+    guard compatibility.isAvailable else {
+      throw DisplayControllerError.incompatibleSavedSettings(
+        missing: compatibility.missingMonitorNames,
+        additional: compatibility.additionalMonitorNames)
+    }
+    var updated = savedSettings
+    updated[index].configuration = try captureConfiguration(from: currentDisplays)
+    do {
+      try savedSettingsStore.save(updated)
+    } catch {
+      throw DisplayControllerError.savedSettingsUpdateFailed
+    }
+    savedSettings = updated
+    activeSavedSettingsIsModified = false
   }
 
   func renameSavedSettings(id: UUID, to name: String) throws {
@@ -271,11 +273,15 @@ final class DisplayController {
     let updated = savedSettings.filter { $0.id != id }
     try savedSettingsStore.save(updated)
     savedSettings = updated
-    if activeSavedSettingsID == id { activeSavedSettingsID = nil }
+    if activeSavedSettingsID == id {
+      activeSavedSettingsID = nil
+      activeSavedSettingsIsModified = false
+    }
   }
 
   func selectNoSavedSettings() {
     activeSavedSettingsID = nil
+    activeSavedSettingsIsModified = false
   }
 
   func compatibility(of setting: SavedSettings, with displays: [DisplayDescriptor])
@@ -331,6 +337,7 @@ final class DisplayController {
     nightMode = setting.configuration.nightMode
     let result = try displays()
     activeSavedSettingsID = setting.id
+    activeSavedSettingsIsModified = false
     return result
   }
 
@@ -374,19 +381,12 @@ final class DisplayController {
     return SavedDisplayConfiguration(monitors: monitors, nightMode: nightMode)
   }
 
-  private func autoSaveActiveSettings(after displays: [DisplayDescriptor]) throws {
+  private func refreshModificationState(after displays: [DisplayDescriptor]) throws {
     guard let activeSavedSettingsID,
-      let index = savedSettings.firstIndex(where: { $0.id == activeSavedSettingsID })
+      let setting = savedSettings.first(where: { $0.id == activeSavedSettingsID })
     else { return }
-    var updated = savedSettings
-    updated[index].configuration = try captureConfiguration(from: displays)
-    do {
-      try savedSettingsStore.save(updated)
-      savedSettings = updated
-    } catch {
-      self.activeSavedSettingsID = nil
-      throw DisplayControllerError.savedSettingsUpdateFailed
-    }
+    activeSavedSettingsIsModified =
+      try captureConfiguration(from: displays) != setting.configuration
   }
 
   private func detachActiveSettingsIfIncompatible(with displays: [DisplayDescriptor]) {
@@ -395,6 +395,7 @@ final class DisplayController {
     else { return }
     if !compatibility(of: setting, with: displays).isAvailable {
       self.activeSavedSettingsID = nil
+      activeSavedSettingsIsModified = false
     }
   }
 

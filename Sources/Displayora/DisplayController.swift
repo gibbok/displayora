@@ -223,6 +223,8 @@ final class DisplayController {
       try backend.setBrightnessPercentage(100, for: display.id)
       rememberedBrightness[display.displayUUID] = 100
     }
+    try backend.setNightMode(.none)
+    nightMode = .none
     let result = try displays()
     try refreshModificationState(after: result)
     return result

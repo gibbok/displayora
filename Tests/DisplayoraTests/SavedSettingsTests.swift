@@ -164,7 +164,7 @@ struct SavedSettingsTests {
     #expect(controller.activeSavedSettingsID == nil)
   }
 
-  @Test("Reset enables every display and restores all brightness values to 100 percent")
+  @Test("Reset enables every display, restores brightness, and turns off Night mode")
   func resetDisplays() throws {
     let backend = ProfileDisplayBackend(
       online: [10, 20], active: [10], brightness: [10: 35, 20: 60])
@@ -181,7 +181,8 @@ struct SavedSettingsTests {
       ])
     #expect(displays.map(\.isActive) == [true, true])
     #expect(displays.map(\.brightnessPercentage) == [100, 100])
-    #expect(controller.nightMode == .warm)
+    #expect(backend.nightModeCalls == [.warm, .none])
+    #expect(controller.nightMode == .none)
   }
 
   @Test("A failed explicit update preserves the active setup and its saved snapshot")

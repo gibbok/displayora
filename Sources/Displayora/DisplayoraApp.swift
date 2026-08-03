@@ -81,17 +81,8 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       }
     }
 
-    let nightModeItem = NSMenuItem(title: "Night mode", action: nil, keyEquivalent: "")
-    let nightModeMenu = NSMenu(title: "Night mode")
-    for (index, mode) in NightMode.allCases.enumerated() {
-      let modeItem = NSMenuItem(
-        title: mode.title, action: #selector(changeNightMode(_:)), keyEquivalent: "")
-      modeItem.target = self
-      modeItem.tag = index
-      modeItem.state = mode == displayController.nightMode ? .on : .off
-      nightModeMenu.addItem(modeItem)
-    }
-    nightModeItem.submenu = nightModeMenu
+    let nightModeItem = NSMenuItem()
+    nightModeItem.view = nightModeRow()
     menu.addItem(nightModeItem)
 
     let resetItem = NSMenuItem()
@@ -103,7 +94,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     resetButton.bezelStyle = .rounded
     resetButton.frame = NSRect(x: 12, y: 5, width: 366, height: 30)
     resetButton.isEnabled = !displays.isEmpty
-    resetButton.toolTip = "Enable all displays and set every brightness to 100%"
+    resetButton.toolTip = "Enable all displays, set brightness to 100%, and turn off Night mode"
     let resetView = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 40))
     resetView.addSubview(resetButton)
     resetItem.view = resetView
@@ -169,6 +160,21 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     button.frame = NSRect(x: 28, y: 3, width: 190, height: 24)
     button.toolTip = "Adjust displays without changing a saved setup"
     row.addSubview(button)
+    return row
+  }
+
+  private func nightModeRow() -> NSView {
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 38))
+    let label = NSTextField(labelWithString: "Night mode")
+    label.frame = NSRect(x: 14, y: 11, width: 120, height: 17)
+    row.addSubview(label)
+
+    let control = NSSegmentedControl(
+      labels: NightMode.allCases.map(\.title), trackingMode: .selectOne, target: self,
+      action: #selector(changeNightMode(_:)))
+    control.frame = NSRect(x: 218, y: 5, width: 158, height: 28)
+    control.selectedSegment = NightMode.allCases.firstIndex(of: displayController.nightMode) ?? 0
+    row.addSubview(control)
     return row
   }
 
@@ -347,14 +353,14 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
   }
 
-  @objc private func changeNightMode(_ sender: NSMenuItem) {
-    guard NightMode.allCases.indices.contains(sender.tag) else {
+  @objc private func changeNightMode(_ sender: NSSegmentedControl) {
+    guard NightMode.allCases.indices.contains(sender.selectedSegment) else {
       refreshMenu()
       return
     }
 
     do {
-      try displayController.setNightMode(NightMode.allCases[sender.tag])
+      try displayController.setNightMode(NightMode.allCases[sender.selectedSegment])
       refreshMenu()
     } catch {
       refreshMenu()

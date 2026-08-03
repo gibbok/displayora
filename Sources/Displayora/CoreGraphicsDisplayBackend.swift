@@ -33,12 +33,25 @@ private func configureDisplayEnabled(
 ) -> CGError
 
 struct CoreGraphicsDisplayBackend: DisplayBackend {
+  private let softwareBrightness: SoftwareBrightnessController
+
+  init() {
+    softwareBrightness = MainActor.assumeIsolated {
+      SoftwareBrightnessController()
+    }
+  }
+
   func onlineDisplayIDs() throws -> [CGDirectDisplayID] {
     try displayIDs(returnedBy: CGGetOnlineDisplayList, error: CoreGraphicsDisplayError.listOnline)
   }
 
   func activeDisplayIDs() throws -> [CGDirectDisplayID] {
-    try displayIDs(returnedBy: CGGetActiveDisplayList, error: CoreGraphicsDisplayError.listActive)
+    let ids = try displayIDs(
+      returnedBy: CGGetActiveDisplayList, error: CoreGraphicsDisplayError.listActive)
+    MainActor.assumeIsolated {
+      softwareBrightness.reconcile(activeDisplayIDs: Set(ids))
+    }
+    return ids
   }
 
   func localizedDisplayNames() -> [CGDirectDisplayID: String] {
@@ -73,6 +86,18 @@ struct CoreGraphicsDisplayBackend: DisplayBackend {
     }
   }
 
+  func brightnessPercentage(for id: CGDirectDisplayID) -> Int? {
+    MainActor.assumeIsolated {
+      softwareBrightness.percentage(for: id)
+    }
+  }
+
+  func setBrightnessPercentage(_ percentage: Int, for id: CGDirectDisplayID) throws {
+    MainActor.assumeIsolated {
+      softwareBrightness.setPercentage(percentage, for: id)
+    }
+  }
+
   private func displayIDs(
     returnedBy function: (
       _ maxDisplays: UInt32, _ displays: UnsafeMutablePointer<CGDirectDisplayID>?,
@@ -89,5 +114,120 @@ struct CoreGraphicsDisplayBackend: DisplayBackend {
     result = function(count, &ids, &count)
     guard result == .success else { throw makeError(result) }
     return Array(ids.prefix(Int(count)))
+  }
+}
+
+enum SoftwareBrightness {
+  static func overlayOpacity(for percentage: Int) -> CGFloat {
+    1 - CGFloat(percentage) / 100
+  }
+}
+
+@MainActor
+private final class SoftwareBrightnessController: NSObject {
+  private var percentages: [CGDirectDisplayID: Int] = [:]
+  private var overlays: [CGDirectDisplayID: NSWindow] = [:]
+
+  override init() {
+    super.init()
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(screenParametersDidChange),
+      name: NSApplication.didChangeScreenParametersNotification,
+      object: nil)
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(applicationWillTerminate),
+      name: NSApplication.willTerminateNotification,
+      object: nil)
+  }
+
+  func percentage(for displayID: CGDirectDisplayID) -> Int {
+    percentages[displayID] ?? 100
+  }
+
+  func setPercentage(_ percentage: Int, for displayID: CGDirectDisplayID) {
+    percentages[displayID] = percentage
+    updateOverlay(for: displayID, on: screen(for: displayID))
+  }
+
+  func reconcile(activeDisplayIDs: Set<CGDirectDisplayID>) {
+    for displayID in Array(overlays.keys) where !activeDisplayIDs.contains(displayID) {
+      removeOverlay(for: displayID)
+    }
+
+    for displayID in percentages.keys where activeDisplayIDs.contains(displayID) {
+      updateOverlay(for: displayID, on: screen(for: displayID))
+    }
+  }
+
+  @objc private func screenParametersDidChange() {
+    let screensByID = Dictionary(
+      uniqueKeysWithValues: NSScreen.screens.compactMap { screen in
+        screen.displayID.map { ($0, screen) }
+      })
+    reconcile(activeDisplayIDs: Set(screensByID.keys))
+
+    for (displayID, screen) in screensByID where percentages[displayID] != nil {
+      updateOverlay(for: displayID, on: screen)
+    }
+  }
+
+  @objc private func applicationWillTerminate() {
+    removeAllOverlays()
+  }
+
+  private func updateOverlay(for displayID: CGDirectDisplayID, on screen: NSScreen?) {
+    let opacity = SoftwareBrightness.overlayOpacity(for: percentage(for: displayID))
+    guard opacity > 0, let screen else {
+      removeOverlay(for: displayID)
+      return
+    }
+
+    let window = overlays[displayID] ?? makeOverlayWindow()
+    overlays[displayID] = window
+    window.setFrame(screen.frame, display: true)
+    window.alphaValue = opacity
+    window.orderFrontRegardless()
+  }
+
+  private func makeOverlayWindow() -> NSWindow {
+    let window = NSWindow(
+      contentRect: .zero,
+      styleMask: .borderless,
+      backing: .buffered,
+      defer: false)
+    window.backgroundColor = .black
+    window.isOpaque = false
+    window.hasShadow = false
+    window.ignoresMouseEvents = true
+    window.level = .screenSaver
+    window.collectionBehavior = [
+      .canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle,
+    ]
+    return window
+  }
+
+  private func removeOverlay(for displayID: CGDirectDisplayID) {
+    overlays.removeValue(forKey: displayID)?.orderOut(nil)
+  }
+
+  private func removeAllOverlays() {
+    for window in overlays.values {
+      window.orderOut(nil)
+    }
+    overlays.removeAll()
+  }
+
+  private func screen(for displayID: CGDirectDisplayID) -> NSScreen? {
+    NSScreen.screens.first { $0.displayID == displayID }
+  }
+}
+
+extension NSScreen {
+  fileprivate var displayID: CGDirectDisplayID? {
+    (deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber).map {
+      CGDirectDisplayID($0.uint32Value)
+    }
   }
 }

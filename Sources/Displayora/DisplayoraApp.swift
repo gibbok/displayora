@@ -118,7 +118,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     let saveItem = NSMenuItem()
     let saveButton = NSButton(
-      title: "Save Current Setup…",
+      title: "Save Current Setup",
       target: self,
       action: #selector(saveCurrentSettings))
     saveButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: "Add")
@@ -348,15 +348,9 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
   }
 
   @objc private func saveCurrentSettings() {
-    guard
-      let name = promptForName(
-        title: "Save Current Setup",
-        message: "Choose a name that will make this display setup easy to recognize.",
-        defaultName: displayController.suggestedSavedSettingsName())
-    else { return }
     do {
       expandedActionsSettingsID = nil
-      _ = try displayController.createSavedSettings(named: name)
+      _ = try displayController.createSavedSettings()
       refreshMenu()
     } catch {
       refreshMenu()

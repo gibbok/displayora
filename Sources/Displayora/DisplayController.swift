@@ -228,10 +228,6 @@ final class DisplayController {
     return setting
   }
 
-  func suggestedSavedSettingsName() -> String {
-    nextDefaultName()
-  }
-
   func updateActiveSavedSettings() throws {
     guard let activeSavedSettingsID,
       let index = savedSettings.firstIndex(where: { $0.id == activeSavedSettingsID })

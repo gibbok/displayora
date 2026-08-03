@@ -67,23 +67,36 @@ struct CoreGraphicsDisplayBackend: DisplayBackend {
       })
   }
 
-  func setDisplay(_ id: CGDirectDisplayID, enabled: Bool) throws {
+  func displayUUID(for id: CGDirectDisplayID) -> UUID? {
+    guard let displayUUID = CGDisplayCreateUUIDFromDisplayID(id)?.takeRetainedValue() else {
+      return nil
+    }
+    return UUID(uuidString: CFUUIDCreateString(nil, displayUUID) as String)
+  }
+
+  func setDisplaysEnabled(_ states: [CGDirectDisplayID: Bool]) throws {
     var configuration: CGDisplayConfigRef?
     let beginError = CGBeginDisplayConfiguration(&configuration)
     guard beginError == .success, let configuration else {
       throw CoreGraphicsDisplayError.beginConfiguration(beginError)
     }
 
-    let configureError = configureDisplayEnabled(configuration, id, enabled)
-    guard configureError == .success else {
-      CGCancelDisplayConfiguration(configuration)
-      throw CoreGraphicsDisplayError.configure(configureError)
+    for (id, enabled) in states.sorted(by: { $0.key < $1.key }) {
+      let configureError = configureDisplayEnabled(configuration, id, enabled)
+      guard configureError == .success else {
+        CGCancelDisplayConfiguration(configuration)
+        throw CoreGraphicsDisplayError.configure(configureError)
+      }
     }
 
     let completionError = CGCompleteDisplayConfiguration(configuration, .forAppOnly)
     guard completionError == .success else {
       throw CoreGraphicsDisplayError.completeConfiguration(completionError)
     }
+  }
+
+  func setDisplay(_ id: CGDirectDisplayID, enabled: Bool) throws {
+    try setDisplaysEnabled([id: enabled])
   }
 
   func brightnessPercentage(for id: CGDirectDisplayID) -> Int? {
@@ -125,8 +138,16 @@ struct CoreGraphicsDisplayBackend: DisplayBackend {
 }
 
 enum SoftwareBrightness {
+  private static let warmTintOpacity: CGFloat = 0.16
+
   static func overlayOpacity(for percentage: Int) -> CGFloat {
     1 - CGFloat(percentage) / 100
+  }
+
+  static func overlayOpacity(for percentage: Int, nightMode: NightMode) -> CGFloat {
+    let brightnessOpacity = overlayOpacity(for: percentage)
+    guard nightMode == .warm else { return brightnessOpacity }
+    return 1 - (1 - brightnessOpacity) * (1 - warmTintOpacity)
   }
 
   static func overlayColor(for percentage: Int, nightMode: NightMode) -> NSColor {
@@ -204,7 +225,7 @@ private final class SoftwareBrightnessController: NSObject {
 
   private func updateOverlay(for displayID: CGDirectDisplayID, on screen: NSScreen?) {
     let percentage = percentage(for: displayID)
-    let opacity = SoftwareBrightness.overlayOpacity(for: percentage)
+    let opacity = SoftwareBrightness.overlayOpacity(for: percentage, nightMode: nightMode)
     guard opacity > 0, let screen else {
       removeOverlay(for: displayID)
       return

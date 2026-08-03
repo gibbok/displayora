@@ -172,6 +172,18 @@ struct DisplayControllerTests {
     #expect(abs(opacity - expectedOpacity) < 0.000_001)
   }
 
+  @Test("Warm Night mode remains visible at full brightness on every display")
+  func warmNightModeHasIndependentTintOpacity() {
+    let normalOpacity = SoftwareBrightness.overlayOpacity(for: 100, nightMode: .none)
+    let warmOpacity = SoftwareBrightness.overlayOpacity(for: 100, nightMode: .warm)
+
+    #expect(normalOpacity == 0)
+    #expect(warmOpacity > 0)
+    #expect(
+      SoftwareBrightness.overlayOpacity(for: 55, nightMode: .warm)
+        > SoftwareBrightness.overlayOpacity(for: 55, nightMode: .none))
+  }
+
   @Test("Warm overlay color darkens as brightness decreases")
   func warmOverlayColorDarkensWithBrightness() throws {
     let lowBrightnessColor = try #require(

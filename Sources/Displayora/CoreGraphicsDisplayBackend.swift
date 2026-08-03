@@ -67,23 +67,36 @@ struct CoreGraphicsDisplayBackend: DisplayBackend {
       })
   }
 
-  func setDisplay(_ id: CGDirectDisplayID, enabled: Bool) throws {
+  func displayUUID(for id: CGDirectDisplayID) -> UUID? {
+    guard let displayUUID = CGDisplayCreateUUIDFromDisplayID(id)?.takeRetainedValue() else {
+      return nil
+    }
+    return UUID(uuidString: CFUUIDCreateString(nil, displayUUID) as String)
+  }
+
+  func setDisplaysEnabled(_ states: [CGDirectDisplayID: Bool]) throws {
     var configuration: CGDisplayConfigRef?
     let beginError = CGBeginDisplayConfiguration(&configuration)
     guard beginError == .success, let configuration else {
       throw CoreGraphicsDisplayError.beginConfiguration(beginError)
     }
 
-    let configureError = configureDisplayEnabled(configuration, id, enabled)
-    guard configureError == .success else {
-      CGCancelDisplayConfiguration(configuration)
-      throw CoreGraphicsDisplayError.configure(configureError)
+    for (id, enabled) in states.sorted(by: { $0.key < $1.key }) {
+      let configureError = configureDisplayEnabled(configuration, id, enabled)
+      guard configureError == .success else {
+        CGCancelDisplayConfiguration(configuration)
+        throw CoreGraphicsDisplayError.configure(configureError)
+      }
     }
 
     let completionError = CGCompleteDisplayConfiguration(configuration, .forAppOnly)
     guard completionError == .success else {
       throw CoreGraphicsDisplayError.completeConfiguration(completionError)
     }
+  }
+
+  func setDisplay(_ id: CGDirectDisplayID, enabled: Bool) throws {
+    try setDisplaysEnabled([id: enabled])
   }
 
   func brightnessPercentage(for id: CGDirectDisplayID) -> Int? {

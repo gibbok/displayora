@@ -2,11 +2,14 @@ import AppKit
 
 @main
 @MainActor
-final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTextFieldDelegate {
   private let displayController = DisplayController(backend: CoreGraphicsDisplayBackend())
   private let menu = NSMenu()
   private var statusItem: NSStatusItem?
   private var screenChangeObserver: NSObjectProtocol?
+  private var editingSavedSettingsID: UUID?
+  private var confirmingDeleteID: UUID?
+  private var focusSavedSettingsID: UUID?
 
   static func main() {
     let application = NSApplication.shared
@@ -90,9 +93,138 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     menu.addItem(nightModeItem)
 
     menu.addItem(.separator())
+    let saveItem = NSMenuItem()
+    let saveButton = NSButton(
+      title: "Save Current Settings",
+      target: self,
+      action: #selector(saveCurrentSettings))
+    saveButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: "Add")
+    saveButton.imagePosition = .imageLeading
+    saveButton.bezelStyle = .rounded
+    saveButton.font = .boldSystemFont(ofSize: NSFont.systemFontSize)
+    saveButton.frame = NSRect(x: 12, y: 5, width: 286, height: 30)
+    let saveView = NSView(frame: NSRect(x: 0, y: 0, width: 310, height: 40))
+    saveView.addSubview(saveButton)
+    saveItem.view = saveView
+    menu.addItem(saveItem)
+
+    let scratchItem = NSMenuItem(
+      title: "No Saved Settings", action: #selector(selectNoSavedSettings), keyEquivalent: "")
+    scratchItem.target = self
+    scratchItem.state = displayController.activeSavedSettingsID == nil ? .on : .off
+    menu.addItem(scratchItem)
+
+    for setting in displayController.savedSettings {
+      let item = NSMenuItem()
+      item.view = savedSettingsRow(for: setting, displays: displays)
+      menu.addItem(item)
+    }
+
+    menu.addItem(.separator())
     let quitItem = NSMenuItem(title: "Quit Displayora", action: #selector(quit), keyEquivalent: "q")
     quitItem.target = self
     menu.addItem(quitItem)
+
+    if let focusSavedSettingsID {
+      self.focusSavedSettingsID = nil
+      DispatchQueue.main.async { [weak self] in
+        guard let self else { return }
+        let identifier = NSUserInterfaceItemIdentifier(focusSavedSettingsID.uuidString)
+        for item in self.menu.items {
+          if let field = item.view?.subviews.compactMap({ $0 as? ProfileNameField })
+            .first(where: { $0.identifier == identifier })
+          {
+            field.window?.makeFirstResponder(field)
+            field.currentEditor()?.selectedRange = NSRange(
+              location: 0, length: field.stringValue.count)
+            break
+          }
+        }
+      }
+    }
+  }
+
+  private func savedSettingsRow(for setting: SavedSettings, displays: [DisplayDescriptor]) -> NSView
+  {
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 34))
+    let isActive = displayController.activeSavedSettingsID == setting.id
+    let compatibility = displayController.compatibility(of: setting, with: displays)
+
+    let state = NSImageView(frame: NSRect(x: 10, y: 9, width: 16, height: 16))
+    if isActive {
+      state.image = NSImage(systemSymbolName: "checkmark", accessibilityDescription: "Active")
+    } else if !compatibility.isAvailable {
+      state.image = NSImage(
+        systemSymbolName: "exclamationmark.triangle", accessibilityDescription: "Unavailable")
+      state.contentTintColor = .systemOrange
+    }
+    row.addSubview(state)
+
+    if confirmingDeleteID == setting.id {
+      let question = NSTextField(labelWithString: "Delete “\(setting.name)”?")
+      question.lineBreakMode = .byTruncatingTail
+      question.frame = NSRect(x: 34, y: 9, width: 190, height: 17)
+      row.addSubview(question)
+      row.addSubview(
+        profileButton(
+          title: "Cancel", x: 228, width: 68, action: #selector(cancelDelete(_:)), id: setting.id))
+      let delete = profileButton(
+        title: "Delete", x: 300, width: 76, action: #selector(confirmDelete(_:)), id: setting.id)
+      delete.contentTintColor = .systemRed
+      row.addSubview(delete)
+      return row
+    }
+
+    if editingSavedSettingsID == setting.id {
+      let field = ProfileNameField(frame: NSRect(x: 32, y: 5, width: 180, height: 23))
+      field.stringValue = setting.name
+      field.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
+      field.delegate = self
+      field.target = self
+      field.action = #selector(commitRename(_:))
+      field.onCancel = { [weak self] in
+        self?.editingSavedSettingsID = nil
+        self?.refreshMenu()
+      }
+      row.addSubview(field)
+    } else {
+      let name = NSButton(title: setting.name, target: self, action: #selector(beginRename(_:)))
+      name.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
+      name.bezelStyle = .inline
+      name.isBordered = false
+      name.alignment = .left
+      name.lineBreakMode = .byTruncatingTail
+      name.frame = NSRect(x: 28, y: 5, width: compatibility.isAvailable ? 190 : 125, height: 24)
+      row.addSubview(name)
+      if !compatibility.isAvailable {
+        let status = NSTextField(labelWithString: "Unavailable")
+        status.textColor = .secondaryLabelColor
+        status.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        status.frame = NSRect(x: 155, y: 9, width: 65, height: 16)
+        row.addSubview(status)
+      }
+    }
+
+    row.addSubview(
+      profileButton(
+        title: "Apply", x: 225, width: 68, action: #selector(applySavedSettings(_:)), id: setting.id
+      ))
+    let trash = profileButton(
+      title: "", x: 337, width: 32, action: #selector(beginDelete(_:)), id: setting.id)
+    trash.image = NSImage(systemSymbolName: "trash", accessibilityDescription: "Delete")
+    trash.bezelStyle = .inline
+    row.addSubview(trash)
+    return row
+  }
+
+  private func profileButton(
+    title: String, x: CGFloat, width: CGFloat, action: Selector, id: UUID
+  ) -> NSButton {
+    let button = NSButton(title: title, target: self, action: action)
+    button.identifier = NSUserInterfaceItemIdentifier(id.uuidString)
+    button.bezelStyle = .rounded
+    button.frame = NSRect(x: x, y: 5, width: width, height: 24)
+    return button
   }
 
   private func displayRow(for display: DisplayDescriptor, canDisable: Bool) -> NSView {
@@ -201,6 +333,95 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
   }
 
+  @objc private func saveCurrentSettings() {
+    do {
+      let setting = try displayController.createSavedSettings()
+      editingSavedSettingsID = setting.id
+      focusSavedSettingsID = setting.id
+      refreshMenu()
+    } catch {
+      refreshMenu()
+      report(error)
+    }
+  }
+
+  @objc private func selectNoSavedSettings() {
+    displayController.selectNoSavedSettings()
+    editingSavedSettingsID = nil
+    confirmingDeleteID = nil
+    refreshMenu()
+  }
+
+  @objc private func beginRename(_ sender: NSButton) {
+    guard let id = sender.savedSettingsID else { return }
+    editingSavedSettingsID = id
+    confirmingDeleteID = nil
+    focusSavedSettingsID = id
+    refreshMenu()
+  }
+
+  @objc private func commitRename(_ sender: NSTextField) {
+    guard let id = sender.savedSettingsID else { return }
+    let trimmed = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    editingSavedSettingsID = nil
+    guard !trimmed.isEmpty else {
+      refreshMenu()
+      return
+    }
+    do {
+      try displayController.renameSavedSettings(id: id, to: trimmed)
+      refreshMenu()
+    } catch {
+      refreshMenu()
+      report(error)
+    }
+  }
+
+  func controlTextDidEndEditing(_ notification: Notification) {
+    guard let field = notification.object as? NSTextField,
+      let id = field.savedSettingsID,
+      editingSavedSettingsID == id
+    else { return }
+    commitRename(field)
+  }
+
+  @objc private func applySavedSettings(_ sender: NSButton) {
+    guard let id = sender.savedSettingsID else { return }
+    do {
+      let displays = try displayController.applySavedSettings(id: id)
+      editingSavedSettingsID = nil
+      confirmingDeleteID = nil
+      rebuildMenu(with: displays)
+    } catch {
+      refreshMenu()
+      report(error)
+    }
+  }
+
+  @objc private func beginDelete(_ sender: NSButton) {
+    guard let id = sender.savedSettingsID else { return }
+    confirmingDeleteID = id
+    editingSavedSettingsID = nil
+    refreshMenu()
+  }
+
+  @objc private func cancelDelete(_ sender: NSButton) {
+    confirmingDeleteID = nil
+    refreshMenu()
+  }
+
+  @objc private func confirmDelete(_ sender: NSButton) {
+    guard let id = sender.savedSettingsID else { return }
+    do {
+      try displayController.deleteSavedSettings(id: id)
+      confirmingDeleteID = nil
+      refreshMenu()
+    } catch {
+      refreshMenu()
+      report(error)
+    }
+  }
+
   private func report(_ error: Error) {
     NSApplication.shared.activate(ignoringOtherApps: true)
     let alert = NSAlert(error: error)
@@ -210,5 +431,20 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   @objc private func quit() {
     NSApplication.shared.terminate(nil)
+  }
+}
+
+@MainActor
+private final class ProfileNameField: NSTextField {
+  var onCancel: (() -> Void)?
+
+  override func cancelOperation(_ sender: Any?) {
+    onCancel?()
+  }
+}
+
+extension NSControl {
+  fileprivate var savedSettingsID: UUID? {
+    identifier.flatMap { UUID(uuidString: $0.rawValue) }
   }
 }

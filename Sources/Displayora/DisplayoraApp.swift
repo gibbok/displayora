@@ -206,7 +206,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
     let isModified = isActive && displayController.activeSavedSettingsIsModified
     let compatibility = displayController.compatibility(of: setting, with: displays)
 
-    let state = NSImageView(frame: NSRect(x: 10, y: 9, width: 16, height: 16))
+    let state = NSImageView(frame: NSRect(x: 10, y: 8, width: 16, height: 16))
     if isActive {
       state.image = NSImage(systemSymbolName: "checkmark", accessibilityDescription: "Active")
     } else if !compatibility.isAvailable {

@@ -316,18 +316,18 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
   }
 
   private func displayRow(for display: DisplayDescriptor, canDisable: Bool) -> NSView {
-    let row = NSView(frame: NSRect(x: 0, y: 0, width: 310, height: 68))
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 68))
 
     let nameLabel = NSTextField(labelWithString: display.name)
     nameLabel.lineBreakMode = .byTruncatingTail
-    nameLabel.frame = NSRect(x: 14, y: 47, width: 210, height: 17)
+    nameLabel.frame = NSRect(x: 14, y: 47, width: 350, height: 17)
 
     let stateLabel = NSTextField(labelWithString: display.isActive ? "Active" : "Disabled")
     stateLabel.textColor = .secondaryLabelColor
     stateLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-    stateLabel.frame = NSRect(x: 14, y: 33, width: 210, height: 14)
+    stateLabel.frame = NSRect(x: 14, y: 33, width: 350, height: 14)
 
-    let toggle = NSSwitch(frame: NSRect(x: 245, y: 40, width: 50, height: 22))
+    let toggle = NSSwitch(frame: NSRect(x: 324, y: 7, width: 50, height: 22))
     toggle.state = display.isActive ? .on : .off
     toggle.isEnabled = canDisable
     toggle.identifier = NSUserInterfaceItemIdentifier(String(display.id))
@@ -339,7 +339,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
     let slider = NSSlider(
       value: Double(brightness ?? 10), minValue: 10, maxValue: 100, target: self,
       action: #selector(changeBrightness(_:)))
-    slider.frame = NSRect(x: 14, y: 7, width: 225, height: 24)
+    slider.frame = NSRect(x: 14, y: 7, width: 236, height: 24)
     slider.numberOfTickMarks = 20
     slider.tickMarkPosition = .below
     slider.allowsTickMarkValuesOnly = true
@@ -359,7 +359,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
     brightnessLabel.alignment = .right
     brightnessLabel.textColor = .secondaryLabelColor
     brightnessLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-    brightnessLabel.frame = NSRect(x: 239, y: 9, width: 57, height: 17)
+    brightnessLabel.frame = NSRect(x: 260, y: 9, width: 54, height: 17)
 
     row.addSubview(nameLabel)
     row.addSubview(stateLabel)

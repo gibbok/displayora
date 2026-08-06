@@ -8,7 +8,6 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
   private var statusItem: NSStatusItem?
   private var screenChangeObserver: NSObjectProtocol?
   private var expandedActionsSettingsID: UUID?
-  private var confirmingDeleteSettingsID: UUID?
 
   static func main() {
     let application = NSApplication.shared
@@ -54,7 +53,6 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   func menuDidClose(_ menu: NSMenu) {
     expandedActionsSettingsID = nil
-    confirmingDeleteSettingsID = nil
   }
 
   private func refreshMenu() {
@@ -238,21 +236,6 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   private func savedSettingsActionsRow(for setting: SavedSettings) -> NSView {
     let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 36))
-    if confirmingDeleteSettingsID == setting.id {
-      let question = NSTextField(labelWithString: "Delete “\(setting.name)”?")
-      question.lineBreakMode = .byTruncatingTail
-      question.frame = NSRect(x: 28, y: 10, width: 180, height: 17)
-      row.addSubview(question)
-      row.addSubview(
-        profileButton(
-          title: "Cancel", x: 218, width: 72, action: #selector(cancelDelete), id: setting.id))
-      let delete = profileButton(
-        title: "Delete", x: 296, width: 78, action: #selector(confirmDelete(_:)), id: setting.id)
-      delete.contentTintColor = .systemRed
-      row.addSubview(delete)
-      return row
-    }
-
     row.addSubview(
       profileButton(
         title: "Rename…", x: 194, width: 90, action: #selector(beginRename(_:)),
@@ -429,7 +412,6 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   @objc private func showSavedSettingsActions(_ sender: NSButton) {
     guard let id = sender.savedSettingsID else { return }
-    confirmingDeleteSettingsID = nil
     expandedActionsSettingsID = expandedActionsSettingsID == id ? nil : id
     refreshMenu()
   }
@@ -439,7 +421,6 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       let id = sender.savedSettingsID,
       let setting = displayController.savedSettings.first(where: { $0.id == id })
     else { return }
-    confirmingDeleteSettingsID = nil
 
     let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
     field.stringValue = setting.name
@@ -484,21 +465,26 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
   }
 
   @objc private func beginDelete(_ sender: NSButton) {
-    guard let id = sender.savedSettingsID else { return }
-    confirmingDeleteSettingsID = id
-    refreshMenu()
-  }
+    guard
+      let id = sender.savedSettingsID,
+      let setting = displayController.savedSettings.first(where: { $0.id == id })
+    else { return }
 
-  @objc private func cancelDelete() {
-    confirmingDeleteSettingsID = nil
-    refreshMenu()
-  }
+    let alert = NSAlert()
+    alert.messageText = "Delete saved setup?"
+    alert.informativeText = "“\(setting.name)” will be permanently deleted."
+    alert.alertStyle = .warning
+    let delete = alert.addButton(withTitle: "Delete")
+    delete.contentTintColor = .systemRed
+    let cancel = alert.addButton(withTitle: "Cancel")
+    cancel.keyEquivalent = "\u{1b}"
 
-  @objc private func confirmDelete(_ sender: NSButton) {
-    guard let id = sender.savedSettingsID else { return }
+    NSApplication.shared.activate(ignoringOtherApps: true)
+    defer { reopenMenu() }
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+
     do {
       try displayController.deleteSavedSettings(id: id)
-      confirmingDeleteSettingsID = nil
       expandedActionsSettingsID = nil
       refreshMenu()
     } catch {

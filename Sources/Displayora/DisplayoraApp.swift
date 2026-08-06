@@ -291,17 +291,13 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
 
     row.addSubview(
       profileButton(
-        title: "Rename…", x: 28, width: 90, action: #selector(renameSavedSettings(_:)),
+        title: "Rename…", x: 194, width: 90, action: #selector(renameSavedSettings(_:)),
         id: setting.id))
     let delete = profileButton(
-      title: "Delete…", x: 124, width: 86, action: #selector(beginDelete(_:)),
+      title: "Delete…", x: 290, width: 86, action: #selector(beginDelete(_:)),
       id: setting.id)
     delete.contentTintColor = .systemRed
     row.addSubview(delete)
-    let close = profileButton(
-      title: "Done", x: 302, width: 72, action: #selector(hideSavedSettingsActions),
-      id: setting.id)
-    row.addSubview(close)
     return row
   }
 
@@ -474,12 +470,6 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTe
     guard let id = sender.savedSettingsID else { return }
     confirmingDeleteSettingsID = nil
     expandedActionsSettingsID = expandedActionsSettingsID == id ? nil : id
-    refreshMenu()
-  }
-
-  @objc private func hideSavedSettingsActions() {
-    expandedActionsSettingsID = nil
-    confirmingDeleteSettingsID = nil
     refreshMenu()
   }
 

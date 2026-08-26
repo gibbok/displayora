@@ -2,8 +2,8 @@
 set -eu
 
 root_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-app_dir=${1:-"$root_dir/build/$(uname -m)/Displayora.app"}
-expected_arch=${2:-$(uname -m)}
+app_dir=${1:-"$root_dir/build/x86_64/Displayora.app"}
+expected_arch=x86_64
 plist="$app_dir/Contents/Info.plist"
 executable="$app_dir/Contents/MacOS/Displayora"
 

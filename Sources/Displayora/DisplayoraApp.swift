@@ -125,18 +125,31 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     saveButton.bezelStyle = .rounded
     saveButton.controlSize = .large
     saveButton.frame = NSRect(
-      x: Layout.horizontalInset, y: 6, width: Layout.contentWidth,
+      x: Layout.horizontalInset - 2, y: 6, width: Layout.contentWidth + 2,
       height: Layout.primaryButtonHeight)
     let saveView = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 48))
     saveView.addSubview(saveButton)
     saveItem.view = saveView
     menu.addItem(saveItem)
 
+    menu.addItem(spacerItem(height: 2))
     menu.addItem(.separator())
     let quitItem = NSMenuItem(title: "Quit Displayora", action: #selector(quit), keyEquivalent: "q")
+    let quitTitleStyle = NSMutableParagraphStyle()
+    quitTitleStyle.firstLineHeadIndent = 1
+    quitTitleStyle.headIndent = 1
+    quitItem.attributedTitle = NSAttributedString(
+      string: quitItem.title, attributes: [.paragraphStyle: quitTitleStyle])
     quitItem.target = self
     menu.addItem(quitItem)
+    menu.addItem(spacerItem(height: 4))
 
+  }
+
+  private func spacerItem(height: CGFloat) -> NSMenuItem {
+    let item = NSMenuItem()
+    item.view = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: height))
+    return item
   }
 
   private func noSavedSettingsRow() -> NSView {

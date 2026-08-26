@@ -75,6 +75,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
   private func rebuildMenu(with displays: [DisplayDescriptor]) {
     menu.removeAllItems()
     let activeCount = displays.lazy.filter(\.isActive).count
+    menu.addItem(spacerItem(height: 2))
 
     if displays.isEmpty {
       let unavailableItem = NSMenuItem(
@@ -134,7 +135,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     menu.addItem(spacerItem(height: 2))
     menu.addItem(.separator())
-    let quitItem = NSMenuItem(title: "Quit Displayora", action: #selector(quit), keyEquivalent: "q")
+    let quitItem = NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q")
     let quitTitleStyle = NSMutableParagraphStyle()
     quitTitleStyle.firstLineHeadIndent = 1
     quitTitleStyle.headIndent = 1

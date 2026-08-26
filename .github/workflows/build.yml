@@ -1,0 +1,81 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            asset: Displayora-Apple-Silicon.zip
+            runner: macos-15
+          - arch: x86_64
+            asset: Displayora-Intel.zip
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Verify runner architecture
+        run: test "$(uname -m)" = "${{ matrix.arch }}"
+
+      - name: Build, smoke test, and package
+        run: |
+          make ci ARCH="${{ matrix.arch }}"
+          mv "build/Displayora-${{ matrix.arch }}.zip" "build/${{ matrix.asset }}"
+
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: build/${{ matrix.asset }}
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download applications
+        uses: actions/download-artifact@v8
+        with:
+          pattern: Displayora-*.zip
+          path: dist
+          merge-multiple: true
+
+      - name: Verify release files
+        run: |
+          test -f dist/Displayora-Apple-Silicon.zip
+          test -f dist/Displayora-Intel.zip
+          unzip -tq dist/Displayora-Apple-Silicon.zip
+          unzip -tq dist/Displayora-Intel.zip
+          unzip -Z1 dist/Displayora-Apple-Silicon.zip | grep -Fx 'Displayora.app/Contents/MacOS/Displayora'
+          unzip -Z1 dist/Displayora-Intel.zip | grep -Fx 'Displayora.app/Contents/MacOS/Displayora'
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/Displayora-Apple-Silicon.zip \
+            dist/Displayora-Intel.zip \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --generate-notes \
+            --title "Displayora $GITHUB_REF_NAME"

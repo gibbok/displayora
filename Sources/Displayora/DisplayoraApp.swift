@@ -163,12 +163,13 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     let rowHeight: CGFloat = 48
     let controlHeight = Layout.primaryButtonHeight
     let controlY = (rowHeight - controlHeight) / 2
+    let nightModeYOffset: CGFloat = -2
     let row = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: rowHeight))
 
     let label = NSTextField(labelWithString: "Night mode")
     let labelHeight: CGFloat = 17
     label.frame = NSRect(
-      x: Layout.horizontalInset, y: (rowHeight - labelHeight) / 2, width: 72,
+      x: Layout.horizontalInset, y: ((rowHeight - labelHeight) / 2) + nightModeYOffset, width: 72,
       height: labelHeight)
     row.addSubview(label)
 
@@ -176,7 +177,8 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       labels: NightMode.allCases.map(\.title), trackingMode: .selectOne, target: self,
       action: #selector(changeNightMode(_:)))
     control.controlSize = .large
-    control.frame = NSRect(x: 94, y: controlY, width: 166, height: controlHeight)
+    control.frame = NSRect(
+      x: 94, y: controlY + nightModeYOffset, width: 166, height: controlHeight)
     control.selectedSegment = NightMode.allCases.firstIndex(of: displayController.nightMode) ?? 0
     row.addSubview(control)
 

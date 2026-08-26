@@ -1,22 +1,18 @@
 APP := Displayora
 TARGET_TRIPLE := x86_64-apple-macosx13.0
-ARCH ?= $(shell uname -m)
-BUILD_DIR := build/$(ARCH)
+BUILD_DIR := build/x86_64
 APP_DIR := $(BUILD_DIR)/$(APP).app
-ARTIFACT := build/$(APP)-$(ARCH).zip
-SWIFT_SCRATCH := $(CURDIR)/.build/$(ARCH)
+ARTIFACT := build/$(APP)-Intel.zip
+SWIFT_SCRATCH := $(CURDIR)/.build/x86_64
 CLANG_MODULE_CACHE_PATH := $(SWIFT_SCRATCH)/clang-module-cache
 SWIFTPM_MODULECACHE_OVERRIDE := $(SWIFT_SCRATCH)/swift-module-cache
-SWIFT_BUILD_FLAGS := -c release --arch $(ARCH) --scratch-path "$(SWIFT_SCRATCH)" --disable-sandbox --manifest-cache local
+SWIFT_BUILD_FLAGS := -c release --arch x86_64 --scratch-path "$(SWIFT_SCRATCH)" --disable-sandbox --manifest-cache local
 DEVELOPER_PATH := $(shell xcode-select -p)
 TEST_FRAMEWORKS := $(DEVELOPER_PATH)/Library/Developer/Frameworks
 
-.PHONY: check-arch build package ci run rebuild test smoke-test clean stop
+.PHONY: build package ci run rebuild test smoke-test clean stop
 
-check-arch:
-	@case "$(ARCH)" in arm64|x86_64) ;; *) echo "Unsupported ARCH: $(ARCH)" >&2; exit 2;; esac
-
-build: check-arch
+build:
 	CLANG_MODULE_CACHE_PATH="$(CLANG_MODULE_CACHE_PATH)" SWIFTPM_MODULECACHE_OVERRIDE="$(SWIFTPM_MODULECACHE_OVERRIDE)" swift build $(SWIFT_BUILD_FLAGS)
 	rm -rf "$(APP_DIR)"
 	mkdir -p "$(APP_DIR)/Contents/MacOS" "$(APP_DIR)/Contents/Resources"
@@ -33,7 +29,7 @@ package: build
 	unzip -tq "$(ARTIFACT)"
 	@echo "Created $(ARTIFACT)"
 
-ci: smoke-test package
+ci: test smoke-test package
 
 run: stop build
 	open "$(APP_DIR)"
@@ -42,12 +38,11 @@ rebuild: stop clean build
 	open "$(APP_DIR)"
 
 test:
-
 	CLANG_MODULE_CACHE_PATH="$(CLANG_MODULE_CACHE_PATH)" SWIFTPM_MODULECACHE_OVERRIDE="$(SWIFTPM_MODULECACHE_OVERRIDE)" swift build --triple $(TARGET_TRIPLE)
 	CLANG_MODULE_CACHE_PATH="$(CLANG_MODULE_CACHE_PATH)" SWIFTPM_MODULECACHE_OVERRIDE="$(SWIFTPM_MODULECACHE_OVERRIDE)" swift test --triple $(TARGET_TRIPLE) --enable-swift-testing --disable-xctest -Xswiftc -target -Xswiftc x86_64-apple-macosx14.0 -Xswiftc -F -Xswiftc $(TEST_FRAMEWORKS) -Xswiftc -Xlinker -Xswiftc -rpath -Xswiftc -Xlinker -Xswiftc $(TEST_FRAMEWORKS)
 
 smoke-test: build
-	sh Tests/smoke-test.sh "$(APP_DIR)" "$(ARCH)"
+	sh Tests/smoke-test.sh "$(APP_DIR)"
 
 clean:
 

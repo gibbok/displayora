@@ -12,35 +12,23 @@ permissions:
 
 jobs:
   build:
-    name: Build (${{ matrix.arch }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: arm64
-            asset: Displayora-Apple-Silicon.zip
-            runner: macos-15
-          - arch: x86_64
-            asset: Displayora-Intel.zip
-            runner: macos-15-intel
-    runs-on: ${{ matrix.runner }}
+    name: Build Intel application
+    runs-on: macos-15-intel
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
 
       - name: Verify runner architecture
-        run: test "$(uname -m)" = "${{ matrix.arch }}"
+        run: test "$(uname -m)" = x86_64
 
       - name: Build, smoke test, and package
-        run: |
-          make ci ARCH="${{ matrix.arch }}"
-          mv "build/Displayora-${{ matrix.arch }}.zip" "build/${{ matrix.asset }}"
+        run: make ci
 
       - name: Upload application
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset }}
-          path: build/${{ matrix.asset }}
+          name: Displayora-Intel.zip
+          path: build/Displayora-Intel.zip
           if-no-files-found: error
           retention-days: 14
 
@@ -61,11 +49,8 @@ jobs:
 
       - name: Verify release files
         run: |
-          test -f dist/Displayora-Apple-Silicon.zip
           test -f dist/Displayora-Intel.zip
-          unzip -tq dist/Displayora-Apple-Silicon.zip
           unzip -tq dist/Displayora-Intel.zip
-          unzip -Z1 dist/Displayora-Apple-Silicon.zip | grep -Fx 'Displayora.app/Contents/MacOS/Displayora'
           unzip -Z1 dist/Displayora-Intel.zip | grep -Fx 'Displayora.app/Contents/MacOS/Displayora'
 
       - name: Publish GitHub release
@@ -73,7 +58,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            dist/Displayora-Apple-Silicon.zip \
             dist/Displayora-Intel.zip \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \

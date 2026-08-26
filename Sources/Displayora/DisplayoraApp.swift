@@ -89,27 +89,9 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       }
     }
 
-    let nightModeItem = NSMenuItem()
-    nightModeItem.view = nightModeRow()
-    menu.addItem(nightModeItem)
-
-    let resetItem = NSMenuItem()
-    let resetButton = NSButton(
-      title: "Reset Displays", target: self, action: #selector(resetDisplays))
-    resetButton.image = NSImage(
-      systemSymbolName: "arrow.counterclockwise", accessibilityDescription: "Reset")
-    resetButton.imagePosition = .imageLeading
-    resetButton.bezelStyle = .rounded
-    resetButton.controlSize = .large
-    resetButton.frame = NSRect(
-      x: Layout.horizontalInset, y: 6, width: Layout.contentWidth,
-      height: Layout.primaryButtonHeight)
-    resetButton.isEnabled = !displays.isEmpty
-    resetButton.toolTip = "Enable all displays, set brightness to 100%, and turn off Night mode"
-    let resetView = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 48))
-    resetView.addSubview(resetButton)
-    resetItem.view = resetView
-    menu.addItem(resetItem)
+    let displayActionsItem = NSMenuItem()
+    displayActionsItem.view = displayActionsRow(canReset: !displays.isEmpty)
+    menu.addItem(displayActionsItem)
 
     menu.addItem(.separator())
     let savedSetupsHeading = NSMenuItem(
@@ -177,19 +159,38 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     return row
   }
 
-  private func nightModeRow() -> NSView {
-    let row = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 46))
+  private func displayActionsRow(canReset: Bool) -> NSView {
+    let rowHeight: CGFloat = 48
+    let controlHeight = Layout.primaryButtonHeight
+    let controlY = (rowHeight - controlHeight) / 2
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: rowHeight))
+
     let label = NSTextField(labelWithString: "Night mode")
-    label.frame = NSRect(x: Layout.horizontalInset, y: 15, width: 120, height: 17)
+    let labelHeight: CGFloat = 17
+    label.frame = NSRect(
+      x: Layout.horizontalInset, y: (rowHeight - labelHeight) / 2, width: 72,
+      height: labelHeight)
     row.addSubview(label)
 
     let control = NSSegmentedControl(
       labels: NightMode.allCases.map(\.title), trackingMode: .selectOne, target: self,
       action: #selector(changeNightMode(_:)))
     control.controlSize = .large
-    control.frame = NSRect(x: 234, y: 7, width: 172, height: 32)
+    control.frame = NSRect(x: 94, y: controlY, width: 166, height: controlHeight)
     control.selectedSegment = NightMode.allCases.firstIndex(of: displayController.nightMode) ?? 0
     row.addSubview(control)
+
+    let resetButton = NSButton(
+      title: "Reset Displays", target: self, action: #selector(resetDisplays))
+    resetButton.image = NSImage(
+      systemSymbolName: "arrow.counterclockwise", accessibilityDescription: "Reset")
+    resetButton.imagePosition = .imageLeading
+    resetButton.bezelStyle = .rounded
+    resetButton.controlSize = .large
+    resetButton.frame = NSRect(x: 272, y: controlY, width: 134, height: controlHeight)
+    resetButton.isEnabled = canReset
+    resetButton.toolTip = "Enable all displays, set brightness to 100%, and turn off Night mode"
+    row.addSubview(resetButton)
     return row
   }
 

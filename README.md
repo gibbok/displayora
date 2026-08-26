@@ -2,7 +2,7 @@
 
 > Your displays, exactly how you like them—one click away.
 
-<img width="1371" height="1148" alt="displayora-demo" src="https://github.com/user-attachments/assets/f8abed8b-db12-4cdc-83d8-e26d499b5a1b" /> is a lightweight macOS menu bar app that puts your whole display
+Displayora is a lightweight macOS menu bar app that puts your whole display
 setup within reach. Dim a bright external monitor, bring a screen back online,
 add a warm evening tint, or restore your preferred workspace without digging
 through System Settings.
@@ -25,7 +25,7 @@ through System Settings.
 Whether you are moving between focus time, a presentation, and a late-night
 session, Displayora keeps your displays in sync with the moment.
 
-<img width="1371" height="1148" alt="displayora-demo" src="https://github.com/user-attachments/assets/ce962c99-5525-451c-964c-61dea31bbff3" />
+<img width="455" height="497" alt="Displayora" src="https://github.com/user-attachments/assets/450d5c13-46f4-4217-9ddc-9c9978783384" />
 
 ## Download
 

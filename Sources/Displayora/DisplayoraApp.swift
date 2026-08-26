@@ -3,6 +3,14 @@ import AppKit
 @main
 @MainActor
 final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
+  private enum Layout {
+    static let menuWidth: CGFloat = 420
+    static let horizontalInset: CGFloat = 14
+    static let contentWidth = menuWidth - (horizontalInset * 2)
+    static let primaryButtonHeight: CGFloat = 36
+    static let regularButtonHeight: CGFloat = 32
+  }
+
   private let displayController = DisplayController(backend: CoreGraphicsDisplayBackend())
   private let menu = NSMenu()
   private var statusItem: NSStatusItem?
@@ -92,10 +100,13 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       systemSymbolName: "arrow.counterclockwise", accessibilityDescription: "Reset")
     resetButton.imagePosition = .imageLeading
     resetButton.bezelStyle = .rounded
-    resetButton.frame = NSRect(x: 12, y: 5, width: 366, height: 30)
+    resetButton.controlSize = .large
+    resetButton.frame = NSRect(
+      x: Layout.horizontalInset, y: 6, width: Layout.contentWidth,
+      height: Layout.primaryButtonHeight)
     resetButton.isEnabled = !displays.isEmpty
     resetButton.toolTip = "Enable all displays, set brightness to 100%, and turn off Night mode"
-    let resetView = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 40))
+    let resetView = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 48))
     resetView.addSubview(resetButton)
     resetItem.view = resetView
     menu.addItem(resetItem)
@@ -130,8 +141,11 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     saveButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: "Add")
     saveButton.imagePosition = .imageLeading
     saveButton.bezelStyle = .rounded
-    saveButton.frame = NSRect(x: 12, y: 5, width: 366, height: 30)
-    let saveView = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 40))
+    saveButton.controlSize = .large
+    saveButton.frame = NSRect(
+      x: Layout.horizontalInset, y: 6, width: Layout.contentWidth,
+      height: Layout.primaryButtonHeight)
+    let saveView = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 48))
     saveView.addSubview(saveButton)
     saveItem.view = saveView
     menu.addItem(saveItem)
@@ -144,9 +158,9 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
   }
 
   private func noSavedSettingsRow() -> NSView {
-    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 30))
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 38))
     if displayController.activeSavedSettingsID == nil {
-      let checkmark = NSImageView(frame: NSRect(x: 10, y: 7, width: 16, height: 16))
+      let checkmark = NSImageView(frame: NSRect(x: 12, y: 11, width: 16, height: 16))
       checkmark.image = NSImage(
         systemSymbolName: "checkmark", accessibilityDescription: "Selected")
       row.addSubview(checkmark)
@@ -157,22 +171,23 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     button.bezelStyle = .inline
     button.isBordered = false
     button.alignment = .left
-    button.frame = NSRect(x: 28, y: 3, width: 190, height: 24)
+    button.frame = NSRect(x: 30, y: 3, width: 206, height: Layout.regularButtonHeight)
     button.toolTip = "Adjust displays without changing a saved setup"
     row.addSubview(button)
     return row
   }
 
   private func nightModeRow() -> NSView {
-    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 38))
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 46))
     let label = NSTextField(labelWithString: "Night mode")
-    label.frame = NSRect(x: 14, y: 11, width: 120, height: 17)
+    label.frame = NSRect(x: Layout.horizontalInset, y: 15, width: 120, height: 17)
     row.addSubview(label)
 
     let control = NSSegmentedControl(
       labels: NightMode.allCases.map(\.title), trackingMode: .selectOne, target: self,
       action: #selector(changeNightMode(_:)))
-    control.frame = NSRect(x: 218, y: 5, width: 158, height: 28)
+    control.controlSize = .large
+    control.frame = NSRect(x: 234, y: 7, width: 172, height: 32)
     control.selectedSegment = NightMode.allCases.firstIndex(of: displayController.nightMode) ?? 0
     row.addSubview(control)
     return row
@@ -180,12 +195,12 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   private func savedSettingsRow(for setting: SavedSettings, displays: [DisplayDescriptor]) -> NSView
   {
-    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 34))
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 44))
     let isActive = displayController.activeSavedSettingsID == setting.id
     let isModified = isActive && displayController.activeSavedSettingsIsModified
     let compatibility = displayController.compatibility(of: setting, with: displays)
 
-    let state = NSImageView(frame: NSRect(x: 10, y: 8, width: 16, height: 16))
+    let state = NSImageView(frame: NSRect(x: 12, y: 14, width: 16, height: 16))
     if isActive {
       state.image = NSImage(systemSymbolName: "checkmark", accessibilityDescription: "Active")
     } else if !compatibility.isAvailable {
@@ -195,7 +210,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     row.addSubview(state)
 
-    let nameWidth: CGFloat = isModified ? 135 : (compatibility.isAvailable ? 285 : 140)
+    let nameWidth: CGFloat = isModified ? 145 : (compatibility.isAvailable ? 315 : 150)
     let name = NSButton(
       title: setting.name, target: self, action: #selector(applySavedSettings(_:)))
     name.identifier = NSUserInterfaceItemIdentifier(setting.id.uuidString)
@@ -203,7 +218,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     name.isBordered = false
     name.alignment = .left
     name.lineBreakMode = .byTruncatingTail
-    name.frame = NSRect(x: 28, y: 5, width: nameWidth, height: 24)
+    name.frame = NSRect(x: 30, y: 6, width: nameWidth, height: Layout.regularButtonHeight)
     name.toolTip =
       compatibility.isAvailable
       ? "Apply \(setting.name)"
@@ -214,19 +229,19 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
       let status = NSTextField(labelWithString: isModified ? "Modified" : "Unavailable")
       status.textColor = .secondaryLabelColor
       status.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-      status.frame = NSRect(x: 168, y: 9, width: 68, height: 16)
+      status.frame = NSRect(x: 184, y: 14, width: 72, height: 16)
       row.addSubview(status)
     }
 
     if isModified {
       row.addSubview(
         profileButton(
-          title: "Update", x: 238, width: 72, action: #selector(updateSavedSettings(_:)),
+          title: "Update", x: 258, width: 78, action: #selector(updateSavedSettings(_:)),
           id: setting.id))
     }
 
     let actions = profileButton(
-      title: "", x: 344, width: 32, action: #selector(showSavedSettingsActions(_:)),
+      title: "", x: 374, width: 32, action: #selector(showSavedSettingsActions(_:)),
       id: setting.id)
     actions.image = NSImage(systemSymbolName: "ellipsis", accessibilityDescription: "More actions")
     actions.bezelStyle = .inline
@@ -235,13 +250,13 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
   }
 
   private func savedSettingsActionsRow(for setting: SavedSettings) -> NSView {
-    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 36))
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 44))
     row.addSubview(
       profileButton(
-        title: "Rename…", x: 194, width: 90, action: #selector(beginRename(_:)),
+        title: "Rename…", x: 214, width: 94, action: #selector(beginRename(_:)),
         id: setting.id))
     let delete = profileButton(
-      title: "Delete…", x: 290, width: 86, action: #selector(beginDelete(_:)),
+      title: "Delete…", x: 314, width: 92, action: #selector(beginDelete(_:)),
       id: setting.id)
     delete.contentTintColor = .systemRed
     row.addSubview(delete)
@@ -254,23 +269,24 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     let button = NSButton(title: title, target: self, action: action)
     button.identifier = NSUserInterfaceItemIdentifier(id.uuidString)
     button.bezelStyle = .rounded
-    button.frame = NSRect(x: x, y: 5, width: width, height: 24)
+    button.controlSize = .large
+    button.frame = NSRect(x: x, y: 6, width: width, height: Layout.regularButtonHeight)
     return button
   }
 
   private func displayRow(for display: DisplayDescriptor, canDisable: Bool) -> NSView {
-    let row = NSView(frame: NSRect(x: 0, y: 0, width: 390, height: 68))
+    let row = NSView(frame: NSRect(x: 0, y: 0, width: Layout.menuWidth, height: 74))
 
     let nameLabel = NSTextField(labelWithString: display.name)
     nameLabel.lineBreakMode = .byTruncatingTail
-    nameLabel.frame = NSRect(x: 14, y: 47, width: 350, height: 17)
+    nameLabel.frame = NSRect(x: Layout.horizontalInset, y: 52, width: 378, height: 17)
 
     let stateLabel = NSTextField(labelWithString: display.isActive ? "Active" : "Disabled")
     stateLabel.textColor = .secondaryLabelColor
     stateLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-    stateLabel.frame = NSRect(x: 14, y: 33, width: 350, height: 14)
+    stateLabel.frame = NSRect(x: Layout.horizontalInset, y: 37, width: 378, height: 14)
 
-    let toggle = NSSwitch(frame: NSRect(x: 324, y: 7, width: 50, height: 22))
+    let toggle = NSSwitch(frame: NSRect(x: 354, y: 8, width: 52, height: 24))
     toggle.state = display.isActive ? .on : .off
     toggle.isEnabled = canDisable
     toggle.identifier = NSUserInterfaceItemIdentifier(String(display.id))
@@ -282,7 +298,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     let slider = NSSlider(
       value: Double(brightness ?? 10), minValue: 10, maxValue: 100, target: self,
       action: #selector(changeBrightness(_:)))
-    slider.frame = NSRect(x: 14, y: 7, width: 236, height: 24)
+    slider.frame = NSRect(x: Layout.horizontalInset, y: 8, width: 256, height: 26)
     slider.numberOfTickMarks = 20
     slider.tickMarkPosition = .below
     slider.allowsTickMarkValuesOnly = true
@@ -302,7 +318,7 @@ final class DisplayoraApp: NSObject, NSApplicationDelegate, NSMenuDelegate {
     brightnessLabel.alignment = .right
     brightnessLabel.textColor = .secondaryLabelColor
     brightnessLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-    brightnessLabel.frame = NSRect(x: 260, y: 9, width: 54, height: 17)
+    brightnessLabel.frame = NSRect(x: 280, y: 12, width: 64, height: 17)
 
     row.addSubview(nameLabel)
     row.addSubview(stateLabel)
